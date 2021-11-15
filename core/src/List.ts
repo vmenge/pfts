@@ -94,8 +94,8 @@ export class List<A> {
     this._elements.forEach(fn);
   }
 
-  tee(fn: (a: A) => void): List<A> {
-    this._elements.forEach(x => fn(x));
+  tee(fn: (a: A, i?: number) => void): List<A> {
+    this._elements.forEach(fn);
 
     return this;
   }

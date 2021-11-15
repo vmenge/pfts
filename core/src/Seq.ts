@@ -34,12 +34,8 @@ export class Seq<A> {
     return this._lazyList().toJSON();
   }
 
-  map<B>(fn: (a: A) => B): Seq<B> {
+  map<B>(fn: (a: A, i?: number) => B): Seq<B> {
     return new Seq(() => this._lazyList().map(fn));
-  }
-
-  mapi<B>(fn: (idx: number, a: A) => B): Seq<B> {
-    return new Seq(() => this._lazyList().mapi(fn));
   }
 
   choose<B>(fn: (a: A) => Option<B>): Seq<B> {
@@ -50,16 +46,12 @@ export class Seq<A> {
     return new Seq(() => this._lazyList().flatMap(a => fn(a)._lazyList()));
   }
 
-  forEach(fn: (a: A) => void): void {
-    this._lazyList().forEach(fn);
+  iter(fn: (a: A, i?: number) => void): void {
+    this._lazyList().iter(fn);
   }
 
-  forEachi(fn: (idx: number, a: A) => void): void {
-    this._lazyList().forEachi(fn);
-  }
-
-  tee(fn: (a: A) => void): Seq<A> {
-    this._lazyList().forEach(fn);
+  tee(fn: (a: A, i?: number) => void): Seq<A> {
+    this._lazyList().iter(fn);
 
     return this;
   }
