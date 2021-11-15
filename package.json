@@ -1,5 +1,4 @@
 {
-  "private": true,
   "workspaces": [
     "@pfts/core",
     "@pfts/core-tests"
