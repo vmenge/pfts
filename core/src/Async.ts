@@ -58,7 +58,7 @@ export class Async<A> {
   }
 
   /**
-   * `Async<B> -> ((A, B) -> C) -> Async<C>`
+   * `(Async<B>, ((A, B) -> C)) -> Async<C>`
    *
    * Given another `Async` value, evaluates the given function against the result of `Async<A>` and `Async<B>` once both operations are completed.
    * @param b a second `Async` value that must also be evaluated.
@@ -67,7 +67,7 @@ export class Async<A> {
    */
   map2<B, C>(b: Async<B>, fn: (a: A, b: B) => C): Async<C>;
   /**
-   * `Promise<B> -> ((A, B) -> C) -> Async<C>`
+   * `(Promise<B>, ((A, B) -> C)) -> Async<C>`
    *
    * Given a `Promise<B>`, evaluates the given function against the result of `Async<A>` and `Promise<B>` once both operations are completed.
    * @param b a `Promise` value that must also be evaluated.
@@ -110,7 +110,7 @@ export class Async<A> {
   }
 
   /**
-   * `(A -> ()) -> Async<void>`
+   * `(A -> ()) -> Async<()>`
    *
    * Executes the given function against the result of `Async<A>` once the asynchronous operation is completed.
    * @param fn a function that typically executes a side effect.
@@ -151,7 +151,7 @@ export class Async<A> {
   }
 
   /**
-   * `Async<B> -> Async<C> -> Async<A * B * C>`
+   * `(Async<B>, Async<C>) -> Async<A * B * C>`
    *
    * @returns the tupled result of the three asynchronous operations wrapped in a `Async` instance.
    */
