@@ -1,4 +1,4 @@
-import { async, Async, list, some, Option, ok, err, Result } from "../core/src";
+import { async, Async, list, some, Option, ok, err, Result } from "@pfts/core";
 
 describe("Async", () => {
   describe("Async.create()", () => {
@@ -166,60 +166,6 @@ describe("Async", () => {
           expect(x).toEqual(10);
           expect(y).toEqual("hello");
           expect(z).toEqual(false);
-
-          done();
-        });
-    });
-  });
-
-  describe(".and()", () => {
-    it("Adds the result of the given Async<T> value to the tuple wrapped inside a Async instance", done => {
-      async([1, 2])
-        .and(async("three"))
-        .iter(([x, y, z]) => {
-          expect(x).toEqual(1);
-          expect(y).toEqual(2);
-          expect(z).toEqual("three");
-
-          done();
-        });
-    });
-
-    it("Adds the result of the given Promise<T> value to the tuple wrapped inside a Async instance", done => {
-      async([1, 2])
-        .and(Promise.resolve("three"))
-        .iter(([x, y, z]) => {
-          expect(x).toEqual(1);
-          expect(y).toEqual(2);
-          expect(z).toEqual("three");
-
-          done();
-        });
-    });
-  });
-
-  describe(".andWith()", () => {
-    it("Adds the resulting Async<T> of the given function to the tuple wrapped inside a Async instance", done => {
-      async(1)
-        .andWith(x => async(x + 1))
-        .andWith(([x, y]) => async(`${x} ${y}`))
-        .iter(([x, y, z]) => {
-          expect(x).toEqual(1);
-          expect(y).toEqual(2);
-          expect(z).toEqual("1 2");
-
-          done();
-        });
-    });
-
-    it("Adds the resulting Promise<T> of the given function to the tuple wrapped inside a Async instance", done => {
-      async(1)
-        .andWith(x => Promise.resolve(x + 1))
-        .andWith(([x, y]) => async(`${x} ${y}`))
-        .iter(([x, y, z]) => {
-          expect(x).toEqual(1);
-          expect(y).toEqual(2);
-          expect(z).toEqual("1 2");
 
           done();
         });

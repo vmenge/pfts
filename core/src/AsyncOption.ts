@@ -164,45 +164,6 @@ export class AsyncOption<A> {
     return this.bind(a => normalize(b).map(b => [a, b]));
   }
 
-  and<C, T extends [A, C]>(v: AsyncOption<C>): AsyncOption<Flatten<T>>;
-  and<C, T extends [A, C]>(v: Async<Option<C>>): AsyncOption<Flatten<T>>;
-  and<C, T extends [A, C]>(v: Promise<Option<C>>): AsyncOption<Flatten<T>>;
-  and<C, T extends [A, C]>(v: AsyncOption<C> | Async<Option<C>> | Promise<Option<C>>): AsyncOption<Flatten<T>> {
-    return this.zip(normalize(v)).map(x => x.flat() as Flatten<T>);
-  }
-
-  andWith<C, T extends [A, C]>(fn: (a: A) => AsyncOption<NonVoid<C>>): AsyncOption<Flatten<T>>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Async<Option<NonVoid<C>>>): AsyncOption<Flatten<T>>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Async<NonVoid<C>>): AsyncOption<Flatten<T>>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Option<NonVoid<C>>): AsyncOption<Flatten<T>>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Promise<Option<NonVoid<C>>>): AsyncOption<Flatten<T>>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Promise<NonVoid<C>>): AsyncOption<Flatten<T>>;
-  andWith<C, T extends [A, C]>(
-    fn: (
-      a: A
-    ) =>
-      | AsyncOption<NonVoid<C>>
-      | Async<Option<NonVoid<C>>>
-      | Async<NonVoid<C>>
-      | Option<NonVoid<C>>
-      | Promise<Option<NonVoid<C>>>
-      | Promise<NonVoid<C>>
-  ): AsyncOption<Flatten<T>> {
-    const res = this.toAsync().bind(x => {
-      if (x.isSome) {
-        const res = normalize(fn(x.raw!));
-
-        return this.zip(res)
-          .map(x => x.flat() as Flatten<T>)
-          .toAsync();
-      }
-
-      return this.toAsync() as any as Async<Option<Flatten<T>>>;
-    });
-
-    return normalize(res);
-  }
-
   trace(msg?: string): AsyncOption<A> {
     return normalize(
       this.toAsync().map(x => {

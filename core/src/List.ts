@@ -154,6 +154,16 @@ export class List<A> {
     return;
   }
 
+  eq(list: List<A>): boolean {
+    for (const x of this) {
+      for (const y of list) {
+        if (x !== y) return false;
+      }
+    }
+
+    return true;
+  }
+
   toArray(): A[] {
     return [...this._elements];
   }

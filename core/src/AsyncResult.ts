@@ -175,47 +175,6 @@ export class AsyncResult<A, B> {
     return this.bind(a => normalize(b).map(b => [a, b]));
   }
 
-  and<C, T extends [A, C]>(v: AsyncResult<C, B>): AsyncResult<Flatten<T>, B>;
-  and<C, T extends [A, C]>(v: Async<Result<C, B>>): AsyncResult<Flatten<T>, B>;
-  and<C, T extends [A, C]>(v: Promise<Result<C, B>>): AsyncResult<Flatten<T>, B>;
-  and<C, T extends [A, C]>(
-    v: AsyncResult<C, B> | Async<Result<C, B>> | Promise<Result<C, B>>
-  ): AsyncResult<Flatten<T>, B> {
-    return this.zip(normalize(v)).map(x => x.flat() as Flatten<T>);
-  }
-
-  andWith<C, T extends [A, C]>(fn: (a: A) => AsyncResult<NonVoid<C>, B>): AsyncResult<Flatten<T>, B>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Async<Result<NonVoid<C>, B>>): AsyncResult<Flatten<T>, B>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Async<NonVoid<C>>): AsyncResult<Flatten<T>, B>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Result<NonVoid<C>, B>): AsyncResult<Flatten<T>, B>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Promise<Result<NonVoid<C>, B>>): AsyncResult<Flatten<T>, B>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Promise<NonVoid<C>>): AsyncResult<Flatten<T>, B>;
-  andWith<C, T extends [A, C]>(
-    fn: (
-      a: A
-    ) =>
-      | AsyncResult<NonVoid<C>, B>
-      | Async<Result<NonVoid<C>, B>>
-      | Async<NonVoid<C>>
-      | Result<NonVoid<C>, B>
-      | Promise<Result<NonVoid<C>, B>>
-      | Promise<NonVoid<C>>
-  ): AsyncResult<Flatten<T>, B> {
-    const res = this.toAsync().bind(x => {
-      if (x.isOk) {
-        const res = normalize(fn(x.value));
-
-        return this.zip(res)
-          .map(x => x.flat() as Flatten<T>)
-          .toAsync();
-      }
-
-      return this.toAsync() as any as Async<Result<Flatten<T>, B>>;
-    });
-
-    return normalize(res);
-  }
-
   trace(msg?: string): AsyncResult<A, B> {
     return normalize(
       this.toAsync().map(x => {

@@ -91,19 +91,6 @@ export class Validation<A, B> {
     return failure(...this._failures, ...v._failures);
   }
 
-  and<C, T extends [A, C]>(v: Validation<C, B>): Validation<Flatten<T>, B> {
-    return this.zip(v).map(x => x.flat() as Flatten<T>);
-  }
-
-  andThen<C, T extends [A, C]>(fn: (a: A) => Validation<C, B>): Validation<Flatten<T>, B> {
-    if (this.isSuccess) {
-      const res = fn(this._val!);
-      return this.zip(res).map(x => x.flat() as Flatten<T>);
-    }
-
-    return this as any as Validation<Flatten<T>, B>;
-  }
-
   match<C>(successFn: (a: A) => C, failuresFn: (b: List<B>) => C): C {
     if (this.isSuccess) {
       return successFn(this._val!);

@@ -160,64 +160,6 @@ export class Async<A> {
   }
 
   /**
-   * `Async<C> -> Async<A1 * A2 * B1 * B2 ... * C>`
-   *
-   * Appends / tuples the given asynchronous value to to the tuple or value wrapped in an `Async`.
-   * @example
-   * const x = async(5)
-   *             .and(async("victor"))
-   *             .and(async(false));
-   *
-   * expect(x).toEqual(async([5, "victor", false]))
-   */
-  and<C, T extends [A, C]>(v: Async<C>): Async<Flatten<T>>;
-  /**
-   * `Promise<C> -> Async<A1 * A2 * B1 * B2 ... * C>`
-   *
-   * Appends / tuples the given asynchronous value to to the tuple wrapped in an `Async`.
-   * @example
-   * const x = async(5)
-   *             .and(async("victor"))
-   *             .and(async(false));
-   *
-   * expect(x).toEqual(async([5, "victor", false]))
-   */
-  and<C, T extends [A, C]>(v: Promise<C>): Async<Flatten<T>>;
-  and<C, T extends [A, C]>(v: Async<C> | Promise<C>): Async<Flatten<T>> {
-    return this.zip(Async.normalize(v)).map(x => x.flat() as Flatten<T>);
-  }
-
-  /**
-   * `(A1 * A2 * B1 * B2 ... -> Async<C>) -> Async<A1 * A2 * B1 * B2 ... * C>`
-   *
-   * Appends / tuples the asynchronous value from the evaluated function to the tuple wrapped in an `Async`.
-   * @example
-   * const x = async(5)
-   *             .andWith(x => async(x + 10))
-   *             .andWith(([x, y]) => async(x + y));
-   *
-   * expect(x).toEqual(async([5, 15, 20]))
-   */
-  andWith<C, T extends [A, C]>(fn: (a: A) => Async<NonVoid<C>>): Async<Flatten<T>>;
-  /**
-   * `(A1 * A2 * B1 * B2 ... -> Promise<C>) -> Async<A1 * A2 * B1 * B2 ... * C>`
-   *
-   * Appends / tuples the asynchronous value from the evaluated function to the tuple wrapped in an `Async`.
-   * @example
-   * const x = async(5)
-   *             .andWith(x => async(x + 10))
-   *             .andWith(([x, y]) => async(x + y));
-   *
-   * expect(x).toEqual(async([5, 15, 20]))
-   */
-  andWith<C, T extends [A, C]>(fn: (a: A) => Promise<NonVoid<C>>): Async<Flatten<T>>;
-  andWith<C, T extends [A, C]>(fn: (a: A) => Async<NonVoid<C>> | Promise<NonVoid<C>>): Async<Flatten<T>> {
-    const res = this.bind(x => Async.normalize(fn(x)));
-
-    return this.zip(res).map(x => x.flat() as Flatten<T>);
-  }
-
-  /**
    * `(Async<A> | Promise<A>) -> Async<A>`
    *
    * Given an `Async<A>` or `Promise<A>` value, always returns an `Async<A>`.

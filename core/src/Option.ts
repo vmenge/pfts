@@ -7,7 +7,7 @@ import { Seq, seq } from "./Seq";
 import { Flatten } from "./type-utils";
 
 /**
- * A class that can represent the the presence or abscence of a value.
+ * A class that can represent the presence (`Some<A>`) or abscence (`None`) of a value.
  */
 export class Option<A> {
   private constructor(private readonly _value?: A) {}
@@ -227,7 +227,7 @@ export class Option<A> {
   /**
    * `A -> A`
    *
-   * @returns the value contained by the `Option<A>` if it is `Some`, otherwise returns the default value passed as an argument.
+   * @returns the value contained in the `Option<A>` if it is `Some`, otherwise returns the default value passed as an argument.
    */
   defaultValue(value: A): A {
     if (this.isNone) {
@@ -240,7 +240,7 @@ export class Option<A> {
   /**
    * `(() -> A) -> A`
    *
-   * @returns the value contained by the `Option<A>` if it is `Some`, otherwise returns the default value from the evaluated function passed as an argument.
+   * @returns the value contained in the `Option<A>` if it is `Some`, otherwise returns the default value from the evaluated function passed as an argument.
    */
   defaultWith(fn: () => A): A {
     if (this.isNone) {
@@ -293,7 +293,7 @@ export class Option<A> {
    * `Option<A> -> Option<A>`
    *
    * @param ifNone value to be returned if this instance of `Option<A>` is `None`.
-   * @returns `this` `Option<A>` if it is `Some`. Otherwise returns `ifNone`.
+   * @returns this `Option<A>` if it is `Some`. Otherwise returns `ifNone`.
    */
   orElse(ifNone: Option<A>): Option<A> {
     if (this.isNone) {
@@ -307,7 +307,7 @@ export class Option<A> {
    * `(() -> Option<A>) -> Option<A>`
    *
    * @param fn function that evaluates to the value to be returned if this instance of `Option<A>` is `None`.
-   * @returns `this` `Option<A>` if it is `Some`. Otherwise returns result of `fn`.
+   * @returns this `Option<A>` if it is `Some`. Otherwise returns result of `fn`.
    */
   orElseWith(fn: () => Option<A>): Option<A> {
     if (this.isNone) {
@@ -341,41 +341,6 @@ export class Option<A> {
     }
 
     return none();
-  }
-
-  /**
-   * `Option<C> -> Option<A1 * A2 * B1 * B2 ... * C>`
-   *
-   * Appends / tuples the given `Option`'s value to to the tuple or value wrapped in the current `Option` if it is `Some`.
-   * @example
-   * const x = some(5)
-   *             .and(some("victor"))
-   *             .and(some(false));
-   *
-   * expect(x).toEqual(option([5, "victor", false]))
-   */
-  and<C, T extends [A, C]>(v: Option<C>): Option<Flatten<T>> {
-    return this.zip(v).map(x => x.flat() as Flatten<T>);
-  }
-
-  /**
-   * `(A1 * A2 * B1 * B2 ... -> Option<C>) -> Option<A1 * A2 * B1 * B2 ... * C>`
-   *
-   * Appends / tuples the given function's returned `Option` value to to the tuple or value wrapped in the current `Option` if it is `Some`.
-   * @example
-   * const x = some(5)
-   *             .andWith(() => some("victor"))
-   *             .andWith(() => some(false));
-   *
-   * expect(x).toEqual(option([5, "victor", false]))
-   */
-  andWith<C, T extends [A, C]>(fn: (a: A) => Option<C>): Option<Flatten<T>> {
-    if (this.isSome) {
-      const res = fn(this._value!);
-      return this.zip(res).map(x => x.flat() as Flatten<T>);
-    }
-
-    return this as any as Option<Flatten<T>>;
   }
 
   /**
@@ -737,6 +702,17 @@ export class Option<A> {
     return some(Seq.ofArray(result.flat()));
   };
 
+  /**
+   * Initiates a Option Computation.
+   * @example
+   * const res =
+   *   Option.ce()
+   *     .let('x', some(5))
+   *     .let('y', () => some(10))
+   *     .return(({ x, y }) => x + y);
+   *
+   * expect(res.value).toEqual(15);
+   */
   static ce = () => new OptionComputation(some({}));
 }
 
@@ -764,7 +740,7 @@ export const option = Option.create;
 class OptionComputation<A extends Object> {
   constructor(private readonly ctx: Option<A>) {}
 
-   /**
+  /**
    * Assigns a value to a variable inside the computation's scope.
    * @example
    * const res =
@@ -773,7 +749,7 @@ class OptionComputation<A extends Object> {
    *     .let('y', () => some(10))
    *     .return(({ x, y }) => x + y);
    *
-   * expect(res).toEqual(option(15));
+   * expect(res.value).toEqual(15);
    */
   public let<K extends string, T>(
     k: K,
@@ -791,10 +767,10 @@ class OptionComputation<A extends Object> {
    * const res =
    *   Option.ce()
    *     .let('x', some(5))
-   *     .do(({ x }) => console.log(x)) 
+   *     .do(({ x }) => console.log(x))
    *     .return(({ x }) => x);
    *
-   * expect(res).toEqual(option(5));
+   * expect(res.value).toEqual(5);
    */
   public do(fn: (ctx: A) => void): OptionComputation<A> {
     this.ctx.iter(fn);
@@ -811,7 +787,7 @@ class OptionComputation<A extends Object> {
    *     .let('y', () => some(10))
    *     .return(({ x, y }) => x + y);
    *
-   * expect(res).toEqual(some(15));
+   * expect(res.value).toEqual(15);
    */
   public return<T>(fn: (ctx: A) => T): Option<T> {
     return Option.map(fn)(this.ctx);
