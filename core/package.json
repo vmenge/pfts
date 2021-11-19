@@ -1,6 +1,10 @@
 {
   "name": "@pfts/core",
-  "version": "0.0.3",
+  "version": "0.0.4",
+  "license": "MIT",
+  "scripts": {
+    "publish": "tsc && npm publish"
+  },
   "author": {
     "name": "Victor Ferreira Menge",
     "email": "vfmenge@gmail.com"
@@ -10,5 +14,8 @@
     "url": "https://github.com/vmenge/pfts.git"
   },
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "types": "dist/index.d.ts"
 }
