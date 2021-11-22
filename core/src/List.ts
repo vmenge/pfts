@@ -11,7 +11,7 @@ import { Seq } from "./Seq";
 export class List<A> {
   private constructor(private readonly _elements: Array<A>) {}
 
-  static create = <A>(...elements: A[]): List<A> => new List<A>(elements);
+  static new = <A>(...elements: A[]): List<A> => new List<A>(elements);
 
   static ofArray = <A>(arr: A[]): List<A> => new List(arr);
 
@@ -155,10 +155,10 @@ export class List<A> {
   }
 
   eq(list: List<A>): boolean {
-    for (const x of this) {
-      for (const y of list) {
-        if (x !== y) return false;
-      }
+    if (this.length !== list.length) return false;
+
+    for (let i = 0; i < this.length; i++) {
+      if (this._elements[i] !== list._elements[i]) return false;
     }
 
     return true;
@@ -248,7 +248,7 @@ export class List<A> {
    * Returns a new list that contains the elements of the first list followed by elements of the second.
    */
   append(list: List<A>): List<A> {
-    return List.create(...this._elements, ...list._elements);
+    return List.new(...this._elements, ...list._elements);
   }
 
   /**
@@ -573,4 +573,4 @@ export class List<A> {
   }
 }
 
-export const list = List.create;
+export const list = List.new;

@@ -69,6 +69,10 @@ export class AsyncOption<A> {
     return this.raw;
   }
 
+  toPromise(): Promise<Option<A>> {
+    return this.raw.promise;
+  }
+
   map<B>(fn: (a: A) => B): AsyncOption<B> {
     return new AsyncOption(this.raw.map(o => o.map(fn)));
   }

@@ -4,7 +4,7 @@ import { none, option, Option, some } from "./Option";
 export class Dict<A, B> {
   private constructor(private readonly _values: Map<A, B>) {}
 
-  static create<A, B>(...values: [A, B][]): Dict<A, B> {
+  static new<A, B>(...values: [A, B][]): Dict<A, B> {
     return new Dict(new Map(values));
   }
 
@@ -206,4 +206,4 @@ export class Dict<A, B> {
   }
 }
 
-export const dict = Dict.create;
+export const dict = Dict.new;

@@ -69,6 +69,10 @@ export class AsyncResult<A, B> {
     return this.raw;
   }
 
+  toPromise(): Promise<Result<A, B>> {
+    return this.raw.promise;
+  }
+
   map<C>(fn: (a: A) => C): AsyncResult<C, B> {
     return new AsyncResult(this.raw.map(r => r.map(fn)));
   }

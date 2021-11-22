@@ -1,8 +1,8 @@
-import { async } from "./Async";
 import { AsyncResult } from "./AsyncResult";
 import { List, list } from "./List";
-import { Option, some, none, option } from "./Option";
-import { Flatten } from "./type-utils";
+import { Option, none, option } from "./Option";
+import { pipe, Pipe } from "./pipe";
+import { seq, Seq } from "./Seq";
 
 /**
  * A class that can contain an `Ok<A>` value or an `Err<B>` value.
@@ -11,11 +11,12 @@ export class Result<A, B> {
   private constructor(private readonly _val: A | B, private readonly _isOk: boolean) {}
 
   /**
-   * `A -> Result<A, B>`
+   * `ok: A -> Result<A, B>`
    *
+   * ---
    * Creates an `Ok<A>` `Result<A, B>`.
    * @example
-   * const x = ok(3);
+   * const x = Result.ok(3);
    *
    * expect(x).toBeInstanceOf(Result);
    * expect(x.value).toEqual(3);
@@ -23,11 +24,12 @@ export class Result<A, B> {
   static ok = <A, B = never>(a: A): Result<A, B> => new Result<A, B>(a, true) as any;
 
   /**
-   * `B -> Result<A, B>`
+   * `err: B -> Result<A, B>`
    *
+   * ---
    * Creates an `Err<B>` `Result<A, B>`.
    * @example
-   * const x = err("oops");
+   * const x = Result.err("oops");
    *
    * expect(x).toBeInstanceOf(Result);
    * expect(x.err).toEqual("oops");
@@ -106,8 +108,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(A -> C) -> Result<C, B>`
+   * `this: Result<A, B>`
    *
+   * `map: (A -> C) -> Result<C, B>`
+   *
+   * ---
    * Evaluates the given function against the `Ok` value of `Result<A, B>` if it is `Ok`.
    * @param fn mapping function.
    * @returns The resulting value of the mapping function wrapped in a `Result`.
@@ -116,8 +121,8 @@ export class Result<A, B> {
    * expect(x.value).toEqual(10);
    *
    * const y = err("oops").map(x => x * 2);
-   * expect(() => x.value).toThrow();
-   * expect(x.err).toEqual("oops");
+   * expect(() => y.value).toThrow();
+   * expect(y.err).toEqual("oops");
    */
   map<C>(fn: (a: A) => C): Result<C, B> {
     if (this.isOk) {
@@ -128,11 +133,21 @@ export class Result<A, B> {
   }
 
   /**
-   * `(A -> Result<C, B>) -> Result<C, B>`
+   * `this: Result<A, B>`
    *
+   * `bind: (A -> Result<C, B>) -> Result<C, B>`
+   *
+   * ---
    * Evaluates the given function against the `Ok` value of `Result<A, B>` if it is `Ok`.
    * @param fn binder function.
    * @returns The resulting value of the binder function.
+   * @example
+   * const x = ok(5).bind(x => ok(x * 2));
+   * expect(x.value).toEqual(10);
+   *
+   * const y = err("oops").bind(x => ok(x * 2));
+   * expect(() => y.value).toThrow();
+   * expect(y.err).toEqual("oops");
    */
   bind<C>(fn: (a: A) => Result<C, B>): Result<C, B> {
     if (this.isOk) {
@@ -143,11 +158,18 @@ export class Result<A, B> {
   }
 
   /**
-   * `(B -> C) -> Result<A, C>`
+   * `this: Result<A, B>`
    *
+   * `mapErr: (B -> C) -> Result<A, C>`
+   *
+   * ---
    * Evaluates the given function against the `Err` value of `Result<A, B>` if it is `Err`.
    * @param fn mapping function.
    * @returns The `Result` with it's `Err` value mapped.
+   * @example
+   * const x = err("err").mapErr(e => `${e}!!!`);
+   * expect(() => x.value).toThrow();
+   * expect(x.err).toEqual("err!!!");
    */
   mapErr<C>(fn: (b: B) => C): Result<A, C> {
     if (this.isErr) {
@@ -158,10 +180,16 @@ export class Result<A, B> {
   }
 
   /**
-   * `(A -> ()) -> ()`
+   * `this: Result<A, B>`
    *
+   * `iter: (A -> ()) -> ()`
+   *
+   * ---
    * Executes the given function against the `Ok` value of `Result<A, B>` if it is `Ok`.
    * @param fn a function that typically executes a side effect.
+   * @example
+   * ok("hello").iter(x => console.log(x)); // prints "hello"
+   * err("oops").iter(x => console.log(x)); // doesn't print
    */
   iter(fn: (a: A) => void): void {
     if (this.isOk) {
@@ -170,15 +198,18 @@ export class Result<A, B> {
   }
 
   /**
-   * `(A -> ()) -> Result<A, B>`
+   * `this: Result<A, B>`
    *
+   * `tee: (A -> ()) -> Result<A, B>`
+   *
+   * ---
    * Executes the given function against the `Ok` value of `Result<A, B>` if it is `Ok`.
    * @param fn a function that typically executes a side effect.
    * @returns the same `Result<A, B>` instance.
    * @example
    * const res = ok(5)
    *   .map(x => x * 2)
-   *   .tee(x => console.log(`num is ${x}`)) // prints 'num is 10'
+   *   .tee(x => console.log(`num is ${x}`)) // prints "num is 10"
    *   .map(x => x + 1);
    *
    * expect(res.value).toEqual(11);
@@ -192,15 +223,18 @@ export class Result<A, B> {
   }
 
   /**
-   * `(B -> ()) -> Result<A, B>`
+   * `this: Result<A, B>`
    *
+   * `teeErr: (B -> ()) -> Result<A, B>`
+   *
+   * ---
    * Executes the given function against the `Err` value of `Result<A, B>` if it is `Err`.
    * @param fn a function that typically executes a side effect.
    * @returns the same `Result<A, B>` instance.
    * @example
    * const res: Result<string, number> = err(5)
    *   .map(x => `something: ${x}`)
-   *   .teeErr(x => console.log(`err is ${x}`)) // prints 'num is 5'
+   *   .teeErr(x => console.log(`err is ${x}`)) // prints "num is 5"
    *   .mapErr(x => x + 1);
    *
    * expect(res.err).toEqual(6);
@@ -214,8 +248,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(string | undefined) -> ()`
+   * `this: Result<A, B>`
    *
+   * `trace: (string | undefined) -> ()`
+   *
+   * ---
    * Logs the current value of the `Result<A, B>`.
    * @param msg optional message to prepend to the value.
    * @example
@@ -230,8 +267,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(Result<C, B>, ((A, C) -> D)) -> Result<D, B>`
+   * `this: Result<A, B>`
    *
+   * `map2: (Result<C, B>, ((A, C) -> D)) -> Result<D, B>`
+   *
+   * ---
    * Evaluates the given function against the `Ok` values of `Result<A, B>` and `Result<C, B>` if both are `Ok`.
    * @param r the second `Result` value to also be mapped.
    * @param fn mapping function.
@@ -257,8 +297,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(Result<C, B>, Result<D, B>, ((A, C, D) -> E)) -> Result<E, B>`
+   * `this: Result<A, B>`
    *
+   * `map3: (Result<C, B>, Result<D, B>, ((A, C, D) -> E)) -> Result<E, B>`
+   *
+   * ---
    * Evaluates the given function against the `Ok` values of `Result<A, B>`, `Result<C, B>` and `Result<D, B>` if all are `Ok`.
    * @param r1 the second `Result` value to also be mapped.
    * @param r2 the third `Result` value to also be mapped.
@@ -289,8 +332,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `() -> Option<A>`
+   * `this: Result<A, B>`
    *
+   * `toOption: () -> Option<A>`
+   *
+   * ---
    * @returns `Some<A>` if the `Result<A, B>` is `Ok`. Otherwise returns `None`.
    * @example
    * const x = ok(5).toOption();
@@ -308,13 +354,61 @@ export class Result<A, B> {
   }
 
   /**
-   * `() -> List<A>`
+   * `this: Result<A, B>`
    *
+   * `errToOption: () -> Option<B>`
+   *
+   * ---
+   * @returns `Some<B>` if the `Result<A, B>` is `Err`. Otherwise returns `None`.
+   * @example
+   * const x = err("oops").errToOption();
+   * expect(x.value).toEqual("oops");
+   *
+   * const y = ok(5).errToOption();
+   * expect(y.isNone).toEqual(true);
+   */
+  errToOption(): Option<B> {
+    if (this.isErr) {
+      return option(this._val as B);
+    }
+
+    return none();
+  }
+
+  /**
+   * `this: Result<A, B>`
+   *
+   * `toSeq: () -> Seq<A>`
+   *
+   * ---
+   * @returns a `Seq<A>` with one element if the `Result<A, B>` is `Ok`. Otherwise returns an empty `Seq<A>`.
+   * @example
+   * const actual = ok(5).toSeq();
+   * const expected = seq(5);
+   * expect(actual.eq(expected)).toEqual(true);
+   *
+   * const x = err("oops").toSeq();
+   * expect(x.isEmpty()).toEqual(true);
+   */
+  toSeq(): Seq<A> {
+    if (this.isOk) {
+      return seq(this._val as A);
+    }
+
+    return seq();
+  }
+
+  /**
+   * `this: Result<A, B>`
+   *
+   * `toList: () -> List<A>`
+   *
+   * ---
    * @returns a `List<A>` with one element if the `Result<A, B>` is `Ok`. Otherwise returns an empty `List<A>`.
    * @example
    * const actual = ok(5).toList();
    * const expected = list(5);
-   * expect(actual.equals(expected))
+   * expect(actual.eq(expected)).toEqual(true);
    *
    * const x = err("oops").toList();
    * expect(x.isEmpty).toEqual(true);
@@ -328,8 +422,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `() -> A[]`
+   * `this: Result<A, B>`
    *
+   * `toArray: () -> A[]`
+   *
+   * ---
    * @returns a `A[]` with one element if the `Result<A, B>` is `Ok`. Otherwise returns an empty `A[]`.
    * @example
    * const x = ok(5).toArray();
@@ -347,8 +444,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `() -> List<B>`
+   * `this: Result<A, B>`
    *
+   * `errToList: () -> List<B>`
+   *
+   * ---
    * @returns a `List<B>` with one element if the `Result<A, B>` is `Err`. Otherwise returns an empty `List<B>`.
    * @example
    * const actual = err("oops").errToList();
@@ -367,8 +467,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `() -> B[]`
+   * `this: Result<A, B>`
    *
+   * `errToArray: () -> B[]`
+   *
+   * ---
    * @returns a `B[]` with one element if the `Result<A, B>` is `Err`. Otherwise returns an empty `B[]`.
    * @example
    * const x = err("oops").errToArray();
@@ -386,8 +489,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `A -> A`
+   * `this: Result<A, B>`
    *
+   * `defaultValue: A -> A`
+   *
+   * ---
    * @returns the `Ok` value contained in the `Result<A, B>` if it is `Ok`, otherwise returns the default value passed as an argument.
    * @example
    * const x = ok(5).defaultValue(10);
@@ -405,8 +511,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(() -> A) -> A`
+   * `this: Result<A, B>`
    *
+   * `defaultWith: (() -> A) -> A`
+   *
+   * ---
    * @returns the `Ok` value contained in the `Result<A, B>` if it is `Ok`, otherwise returns the default value from the evaluated function passed as an argument.
    * @example
    * const x = ok(5).defaultWith(() => 10);
@@ -424,8 +533,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `Result<A, B> -> Result<A, B>`
+   * `this: Result<A, B>`
    *
+   * `orElse: Result<A, B> -> Result<A, B>`
+   *
+   * ---
    * @param ifErr value to be returned if this instance of `Result<A, B>` is `Err`.
    * @returns this `Result<A, B>` if it is `Ok`. Otherwise returns `ifErr`.
    * @example
@@ -444,8 +556,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(() -> Result<A, B>) -> Result<A, B>`
+   * `this: Result<A, B>`
    *
+   * `orElseWith: (() -> Result<A, B>) -> Result<A, B>`
+   *
+   * ---
    * @param fn function that evaluates to the value to be returned if this instance of `Result<A, B>` is `Err`.
    * @returns this `Result<A, B>` if it is `Ok`. Otherwise returns result of `fn`.
    * @example
@@ -464,8 +579,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `Result<C, B> -> Result<A * C, B>`
+   * `this: Result<A, B>`
    *
+   * `zip: Result<C, B> -> Result<A * C, B>`
+   *
+   * ---
    * @param r `Result` to zip with this one.
    * @returns the tupled values of the two `Result`s if they are all `Ok`, otherwise returns this `Err` or `r`'s `Err`.
    * @example
@@ -477,8 +595,8 @@ export class Result<A, B> {
    * expect(y.err).toEqual("oops");
    *
    * const z = ok(1).zip(err("fatal"));
-   * expect(() => y.value).toThrow();
-   * expect(y.err).toEqual("fatal");
+   * expect(() => z.value).toThrow();
+   * expect(z.err).toEqual("fatal");
    */
   zip<C>(r: Result<C, B>): Result<[A, C], B> {
     if (this.isOk) {
@@ -493,8 +611,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `(Result<C, B>, Result<D, B>) -> Result<A * C * D, B>`
+   * `this: Result<A, B>`
    *
+   * `zip3: (Result<C, B>, Result<D, B>) -> Result<A * C * D, B>`
+   *
+   * ---
    * @param r1 first `Result` to zip with this one.
    * @param r2 second `Result` to zip with this one.
    * @returns the tupled values of the three `Result`s if they are all `Ok`, otherwise returns either this `Err`, `r1`'s `Err` or `r2`'s `Err`.
@@ -523,8 +644,11 @@ export class Result<A, B> {
   }
 
   /**
-   * `((A -> C), B -> C) -> C`
+   * `this: Result<A, B>`
    *
+   * `match: ((A -> C), (B -> C)) -> C`
+   *
+   * ---
    * @param okFn function to be executed if `Result<A, B>` is `Ok`.
    * @param errFn function to be executed if `Result<A, B>` is `Err`.
    * @returns the result of `okFn` or `errFn`.
@@ -537,80 +661,338 @@ export class Result<A, B> {
     return errFn(this._val as B);
   }
 
+  /**
+   * `this: Result<A, B>`
+   *
+   * `pipe: (Result<A, B> -> C) -> C`
+   *
+   * ---
+   * Takes an function to be executed on this current `Result` instance, facilitating function chaining.
+   * @example
+   * const a = ok("3").pipe(x => Number(x.value));
+   * expect(a).toEqual(3);
+   */
+  pipe<C>(fn: (a: Result<A, B>) => C): C {
+    return fn(this);
+  }
+
+  /**
+   * `this: Result<A, B>`
+   *
+   * `toPipe: (Result<A, B> -> C) -> Pipe<C>`
+   *
+   * ---
+   * Wraps the result of the function from the args in a `Pipe`.
+   * @example
+   * const a = ok("3")
+   *   .toPipe(Result.value)
+   *   .return(Number);
+   *
+   * expect(a).toEqual(3);
+   */
+  toPipe<C>(fn: (r: Result<A, B>) => C): Pipe<C> {
+    return pipe(fn(this));
+  }
+
+  /**
+   * `this: Result<A, B>`
+   *
+   * `toAsyncResult: () -> AsyncResult<A, B>`
+   *
+   * ---
+   */
   toAsyncResult(): AsyncResult<A, B> {
     return AsyncResult.ofResult(this);
   }
 
+  /**
+   * `this: Result<A, B>`
+   *
+   * `toString: () -> string`
+   *
+   * ---
+   * @example
+   * const a = ok(5).toString();
+   * expect(a).toEqual("5");
+   *
+   * const b = err("oops").toString();
+   * expect(b).toEqual("oops");
+   */
   toString(): string {
     return `${this._val}`;
   }
 
-  static isOk = <A, B>(r: Result<A, B>) => r.isOk;
-
-  static isErr = <A, B>(r: Result<A, B>) => r.isErr;
+  /**
+   * `isOk: Result<A, B> -> boolean`
+   *
+   * ---
+   * @returns true if `Result<A, B>` is `Ok<A>`.
+   * @example
+   * const val: Result<number, string> = ok(5);
+   * expect(Result.isOk(val)).toEqual(true);
+   */
+  static isOk = <A, B>(r: Result<A, B>): boolean => r.isOk;
 
   /**
-   * Tries to extract a value from a result.
-   * @throws Error if Result is not Ok.
+   * `isErr: Result<A, B> -> boolean`
+   *
+   * ---
+   * @returns true if `Result<A, B>` is `Err<B>`.
+   * @example
+   * const val: Result<number, string> = err("bla");
+   * expect(Result.isErr(err)).toEqual(true);
    */
-  static value = <A, B>(r: Result<A, B>) => r.value;
+  static isErr = <A, B>(r: Result<A, B>): boolean => r.isErr;
 
+  /**
+   * `value: Result<A, B> -> A`
+   *
+   * ---
+   * @returns the `Ok` value contained inside the `Result<A, B>`.
+   * @throws an Error if the `Result<A, B>` is `Err`.
+   * @example
+   * const x = ok(3);
+   * expect(Result.value(x)).toEqual(3);
+   *
+   * const y = err("oops");
+   * expect(() => Result.value(y)).toThrow();
+   */
+  static value = <A, B>(r: Result<A, B>): A => r.value;
+
+  /**
+   * `map: (A -> C) -> Result<A, B> -> Result<C, B>`
+   *
+   *
+   * ---
+   * Evaluates the given function against the `Ok` value of `Result<A, B>` if it is `Ok`.
+   * @param fn mapping function.
+   * @param r `Result` to be mapped.
+   * @returns The resulting value of the mapping function wrapped in a `Result`.
+   * @example
+   * const x = Result.map(x => x * 2)(ok(5));
+   * expect(x.value).toEqual(10);
+   *
+   * const y = Result.map(x => x * 2)(err("oops"));
+   * expect(() => y.value).toThrow();
+   * expect(y.err).toEqual("oops");
+   */
   static map =
     <A, B, C>(fn: (t: A) => C) =>
     (r: Result<A, B>): Result<C, B> =>
       r.map(fn);
 
+  /**
+   * `bind: (A -> Result<C, B>) -> Result<A, B> -> Result<C, B>`
+   *
+   * ---
+   * Evaluates the given function against the `Ok` value of `Result<A, B>` if it is `Ok`.
+   * @param fn binder function.
+   * @param r `Result` to execute the binder on.
+   * @returns The resulting value of the binder function.
+   * @example
+   * const x = Result.bind(x => ok(x * 2))(ok(5));
+   * expect(x.value).toEqual(10);
+   *
+   * const y = Result.bind(x => ok(x * 2))(err("oops"));
+   * expect(() => y.value).toThrow();
+   * expect(y.err).toEqual("oops");
+   */
   static bind =
     <A, B, C>(fn: (t: A) => Result<C, B>) =>
     (r: Result<A, B>): Result<C, B> =>
       r.bind(fn);
 
+  /**
+   * `apply: Result<(A -> B), C> -> Result<A, C> -> Result<B, C>`
+   *
+   * ---
+   */
   static apply =
     <A, B, C>(fn: Result<(a: A) => B, C>) =>
     (r: Result<A, C>): Result<B, C> =>
       Result.bind<(a: A) => B, C, B>(f => Result.bind<A, C, B>(x => ok(f(x)))(r))(fn);
 
+  /**
+   * `mapErr: (B -> C) -> Result<A, B> -> Result<A, C>`
+   *
+   * ---
+   * Evaluates the given function against the `Err` value of `Result<A, B>` if it is `Err`.
+   * @param fn mapping function.
+   * @param r `Result` to be mapped.
+   * @returns The `Result` with it's `Err` value mapped.
+   * @example
+   * const x = Result.mapErr(e => `${e}!!!`)(err("err"));
+   * expect(() => x.value).toThrow();
+   * expect(x.err).toEqual("err!!!");
+   */
   static mapErr =
     <A, B, C>(fn: (b: B) => C) =>
     (r: Result<A, B>): Result<A, C> =>
       r.mapErr(fn);
 
+  /**
+   * `map2: (A, B) -> C) -> Result<A,D> -> Result<B, D> -> Result<C, B>`
+   *
+   * ---
+   * Evaluates the given function against the `Ok` values of `Result<A, D>` and `Result<B, D>` if both are `Ok`.
+   * @param fn mapping function.
+   * @param r1 first `Result` value to be mapped.
+   * @param r2 second `Result` value to be mapped.
+   * @returns The resulting value of the mapping function wrapped in a `Result`.
+   * @example
+   * const x = Result.map2((x, y) => x + y)(ok(5))(ok(10));
+   * expect(x.value).toEqual(15);
+   *
+   * const y = Result.map2((x, y) => x + y)(ok(100))(err("oops"));
+   * expect(() => v.value).toThrow();
+   * expect(y.err).toEqual("oops");
+   */
   static map2 =
-    <A, B, C, Err>(fn: (a: A, b: B) => C) =>
-    (r1: Result<A, Err>) =>
-    (r2: Result<B, Err>): Result<C, Err> =>
+    <A, B, C, D>(fn: (a: A, b: B) => C) =>
+    (r1: Result<A, D>) =>
+    (r2: Result<B, D>): Result<C, D> =>
       r1.map2(r2, fn);
 
+  /**
+   * `map3: (A, B, C) -> D) -> Result<A,E> -> Result<B, E> -> Result<C, E> -> Result<D, E>`
+   *
+   * ---
+   * Evaluates the given function against the `Ok` values of `Result<A, D>` and `Result<B, D>` if both are `Ok`.
+   * @param fn mapping function.
+   * @param r1 first `Result` value to be mapped.
+   * @param r2 second `Result` value to be mapped.
+   * @param r3 third `Result` value to be mapped.
+   * @returns The resulting value of the mapping function wrapped in a `Result`.
+   * @example
+   * const x = Result.map3((x, y, z) => x + y + z)(ok(5))(ok(10))(ok(100));
+   * expect(x.value).toEqual(115);
+   *
+   * const y = Result.map3((x, y, z) => x + y + z)(ok(100))(err("oops"))(ok(99));
+   * expect(() => v.value).toThrow();
+   * expect(y.err).toEqual("oops");
+   */
   static map3 =
-    <A, B, C, D, Err>(fn: (a: A, b: B, c: C) => D) =>
-    (r1: Result<A, Err>) =>
-    (r2: Result<B, Err>) =>
-    (r3: Result<C, Err>): Result<D, Err> =>
+    <A, B, C, D, E>(fn: (a: A, b: B, c: C) => D) =>
+    (r1: Result<A, E>) =>
+    (r2: Result<B, E>) =>
+    (r3: Result<C, E>): Result<D, E> =>
       r1.map3(r2, r3, fn);
 
+  /**
+   * `toOption: Result<A, B> -> Option<A>`
+   *
+   * ---
+   * @returns `Some<A>` if the `Result<A, B>` is `Ok`. Otherwise returns `None`.
+   * @example
+   * const x = Result.toOption(ok(5));
+   * expect(x.value).toEqual(5);
+   *
+   * const y = Result.toOption(err("oops"));
+   * expect(y.isNone).toEqual(true);
+   */
   static toOption = <A, B>(r: Result<A, B>): Option<A> => r.toOption();
 
+  /**
+   * `errToOption: Result<A, B> -> Option<B>`
+   *
+   * ---
+   * @returns `Some<B>` if the `Result<A, B>` is `Err`. Otherwise returns `None`.
+   * @example
+   * const x = Result.errToOption(err("oops"));
+   * expect(x.value).toEqual("oops");
+   *
+   * const y = Result.errToOption(ok(5));
+   * expect(y.isNone).toEqual(true);
+   */
+  static errToOption = <A, B>(r: Result<A, B>): Option<B> => r.errToOption();
+
+  /**
+   * `ofOption: B -> Option<A> -> Result<A, B>`
+   *
+   * ---
+   * @example
+   * const a = Result.ofOption("oops")(some(1));
+   * expect(a.isOk).toEqual(true);
+   * expect(a.value).toEqual(1);
+   *
+   * const b = Result.ofOption("oops")(none());
+   * expect(b.isErr).toEqual(true);
+   * expect(b.err).toEqual("oops");
+   */
   static ofOption =
     <A, B>(error: B) =>
     (o: Option<A>): Result<A, B> =>
       o.isSome ? ok(o.value) : err(error);
 
+  /**
+   * `zip: Result<A, C> -> Result<B, C> -> Result<A * B, C>`
+   *
+   * ---
+   * @param r1 first `Result` to zip.
+   * @param r2 second `Result` to zip.
+   * @returns the tupled values of the two `Result`s if they are all `Ok`, otherwise returns this `Err` or `r`'s `Err`.
+   * @example
+   * const x = Result.zip(ok("hello"))(ok(10));
+   * expect(x.value).toEqual(["hello", 10]);
+   *
+   * const y = Result.zip(err("oops"))(err("oh no"));
+   * expect(() => y.value).toThrow();
+   * expect(y.err).toEqual("oops");
+   *
+   * const z = Result.zip(ok(1))(err("fatal"));
+   * expect(() => z.value).toThrow();
+   * expect(z.err).toEqual("fatal");
+   */
   static zip =
     <A, B, C>(r1: Result<A, C>) =>
     (r2: Result<B, C>): Result<[A, B], C> =>
       r1.zip(r2);
 
+  /**
+   * `zip3: Result<A, D> -> Result<B, D> -> Result<C, D> -> Result<A * B * C, D>`
+   *
+   * ---
+   * @param r1 first `Result` to zip.
+   * @param r2 second `Result` to zip.
+   * @param r3 third `Result` to zip.
+   * @returns the tupled values of the three `Result`s if they are all `Ok`, otherwise returns either this `Err`, `r1`'s `Err` or `r2`'s `Err`.
+   * @example
+   * const x = Result.zip3(ok("hello"))(ok(10))(ok(true));
+   * expect(x.value).toEqual(["hello", 10, true]);
+   *
+   * const y = Result.zip(ok(66))(err("oh no"))(ok(99));
+   * expect(() => y.value).toThrow();
+   * expect(y.err).toEqual("oh no");
+   */
   static zip3 =
     <A, B, C, D>(r1: Result<A, D>) =>
     (r2: Result<B, D>) =>
     (r3: Result<C, D>): Result<[A, B, C], D> =>
       r1.zip3(r2, r3);
 
+  /**
+   * `sequenceArray: Result<A, B>[] -> Result<A[], B>`
+   *
+   * ---
+   */
   static sequenceArray = <A, B>(rs: Result<A, B>[]): Result<A[], B> =>
     rs.reduce((state, curr) => state.map2(curr, (x, y) => [...x, y]), ok<A[], B>([]));
 
+  /**
+   * `sequenceList: List<Result<A, B>> -> Result<List<A>, B>`
+   *
+   * ---
+   */
   static sequenceList = <A, B>(rs: List<Result<A, B>>): Result<List<A>, B> =>
     rs.fold((state, curr) => state.map2(curr, (x, y) => list(...x, y)), ok<List<A>, B>(list()));
+
+  /**
+   * `sequenceSeq: Seq<Result<A, B>> -> Result<Seq<A>, B>`
+   *
+   * ---
+   */
+  static sequenceSeq = <A, B>(rs: Seq<Result<A, B>>): Result<Seq<A>, B> =>
+    Result.sequenceList(rs.toList()).map(Seq.ofList);
 
   /**
    * Initiates a Result Computation.
@@ -626,7 +1008,30 @@ export class Result<A, B> {
   static ce = <A, B>() => new ResultComputation(ok<A, B>({} as any as A));
 }
 
+/**
+ * `ok: A -> Result<A, B>`
+ *
+ * ---
+ * Creates an `Ok<A>` `Result<A, B>`.
+ * @example
+ * const x = ok(3);
+ *
+ * expect(x).toBeInstanceOf(Result);
+ * expect(x.value).toEqual(3);
+ */
 export const ok = Result.ok;
+
+/**
+ * `err: B -> Result<A, B>`
+ *
+ * ---
+ * Creates an `Err<B>` `Result<A, B>`.
+ * @example
+ * const x = err("oops");
+ *
+ * expect(x).toBeInstanceOf(Result);
+ * expect(x.err).toEqual("oops");
+ */
 export const err = Result.err;
 
 class ResultComputation<A extends Object, B> {

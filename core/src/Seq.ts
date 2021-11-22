@@ -5,10 +5,18 @@ import { List, list } from "./List";
 import { Option } from "./Option";
 import { pipe, Pipe } from "./pipe";
 
+/**
+ * A lazy `List`.
+ *
+ * ### WARNING!
+ * Any of `Seq`'s instance methods that returns anything that is not a `Seq` will evaluate the lazy `List` inside the `Seq`.
+ * Take that into consideration and consider using `toList()` if you need to use multiple methods that return types
+ * other than `Seq`.
+ */
 export class Seq<A> {
   private constructor(private readonly _lazyList: () => List<A>) {}
 
-  static create = <A>(...elements: A[]): Seq<A> => new Seq<A>(() => List.ofArray(elements));
+  static new = <A>(...elements: A[]): Seq<A> => new Seq<A>(() => List.ofArray(elements));
 
   static ofList = <A>(list: List<A>): Seq<A> => new Seq(() => list);
 
@@ -17,6 +25,18 @@ export class Seq<A> {
   static range = (start: number, end: number): Seq<number> => {
     return new Seq(() => List.range(start, end));
   };
+
+  isEmpty(): boolean {
+    return this._lazyList().isEmpty;
+  }
+
+  isNotEmpty(): boolean {
+    return this._lazyList().isNotEmpty;
+  }
+
+  length(): number {
+    return this._lazyList().length;
+  }
 
   toList(): List<A> {
     return this._lazyList();
@@ -90,6 +110,10 @@ export class Seq<A> {
 
   reduce(reducer: (accumulator: A, current: A) => A): A {
     return this._lazyList().reduce(reducer);
+  }
+
+  eq(seq: Seq<A>): boolean {
+    return this._lazyList().eq(seq._lazyList());
   }
 
   pipe<B>(fn: (a: Seq<A>) => B): B {
@@ -286,4 +310,4 @@ export class Seq<A> {
   }
 }
 
-export const seq = Seq.create;
+export const seq = Seq.new;

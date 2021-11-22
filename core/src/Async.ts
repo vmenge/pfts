@@ -1,7 +1,6 @@
 import { none, option, Option } from "./Option";
 import { list, List } from "./List";
 import { err, ok, Result } from "./Result";
-import { Flatten, NonVoid } from "./type-utils";
 
 /**
  * `Async<A>` represents a single operation that does not return a value immediately that usually executes asynchronously.
@@ -28,7 +27,7 @@ export class Async<A> {
    *
    * Creates an `Async<A>` from a type `A` or a `Promise<A>`.
    */
-  static create = <A>(a: A | Promise<A>): Async<A> => new Async(a);
+  static new = <A>(a: A | Promise<A>): Async<A> => new Async(a);
 
   /**
    * `Promise<A> -> Async<A>`
@@ -298,7 +297,7 @@ export class Async<A> {
  *
  * Creates an `Async<A>` from a type `A` or a `Promise<A>`.
  */
-export const async = Async.create;
+export const async = Async.new;
 
 class AsyncComputation<A extends Object> {
   constructor(private readonly ctx: Async<A>) {}
