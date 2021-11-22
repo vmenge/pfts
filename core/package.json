@@ -1,9 +1,9 @@
 {
   "name": "@pfts/core",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "scripts": {
-    "publish": "tsc && npm publish"
+    "pub": "tsc && npm publish"
   },
   "author": {
     "name": "Victor Ferreira Menge",
