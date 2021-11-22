@@ -1,9 +1,9 @@
 import { async, Async, list, some, Option, ok, err, Result } from "@pfts/core";
 
 describe("Async", () => {
-  describe("Async.create()", () => {
+  describe("Async.new()", () => {
     it("Creates an Async<number> from 5", done => {
-      const val = Async.create(5);
+      const val = Async.new(5);
 
       expect(val).toBeInstanceOf(Async);
 
@@ -14,7 +14,7 @@ describe("Async", () => {
     });
 
     it("Creates an Async<number> from Promise<number>", done => {
-      const val = Async.create(Promise.resolve(5));
+      const val = Async.new(Promise.resolve(5));
 
       expect(val).toBeInstanceOf(Async);
 
