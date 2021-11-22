@@ -1,6 +1,6 @@
 {
   "name": "@pfts/core",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "scripts": {
     "publish": "tsc && npm publish"
