@@ -94,7 +94,7 @@ export class Pipe<T> {
    * pipe("something").trace(); // prints "something"
    */
   trace(msg?: string): Pipe<T> {
-    const logStr = msg ? `${msg} ${this}` : `${this}`;
+    const logStr = msg ? `${msg} ${this.value}` : `${this.value}`;
     console.log(logStr);
 
     return this;

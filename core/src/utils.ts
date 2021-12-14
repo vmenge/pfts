@@ -2,6 +2,8 @@ import { Snd, Head } from "./type-utils";
 
 export const ignore = <A>(_: A): void => {};
 export const not = (b: boolean) => !b;
+
+export const tuple = <A, B>(a: A, b: B): [A, B] => [a, b];
 export const fst = <A extends any[]>(tuple: [...A]): Head<A> => tuple[0];
 export const snd = <A extends any[]>(tuple: [...A]): Snd<A> => tuple[1];
 

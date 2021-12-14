@@ -7,11 +7,13 @@ import { pipe, Pipe } from "./pipe";
 
 /**
  * A lazy `List`.
- *
+ * 
  * ### WARNING!
  * Any of `Seq`'s instance methods that returns anything that is not a `Seq` will evaluate the lazy `List` inside the `Seq`.
  * Take that into consideration and consider using `toList()` if you need to use multiple methods that return types
  * other than `Seq`.
+ * 
+ * @see {@link List}
  */
 export class Seq<A> {
   private constructor(private readonly _lazyList: () => List<A>) {}

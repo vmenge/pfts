@@ -3,5 +3,9 @@
   "workspaces": [
     "core",
     "core-tests"
-  ]
+  ],
+  "scripts": {
+    "pub:core": "cd core && yarn pub",
+    "test": "cd core-tests && jest"
+  }
 }
