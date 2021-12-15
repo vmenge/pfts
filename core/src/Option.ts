@@ -1030,7 +1030,7 @@ export class Option<A> {
    * expect(b.isSome).toEqual(false);
    * expect(() => b.value).toThrow();
    */
-  static ofTruthy = <A>(a: A): Option<A> => (a ? some(a!) : none());
+  static ofTruthy = <A>(a: A): Option<NonNullable<A>> => (a ? some(a!) : none()) as Option<NonNullable<A>>;
 
   /**
    * `ofFalsy: A -> Option<A>`
@@ -1045,7 +1045,7 @@ export class Option<A> {
    * expect(b.isSome).toEqual(false);
    * expect(() => b.value).toThrow();
    */
-  static ofFalsy = <A>(a: A): Option<A> => (!a ? option(a) : none());
+  static ofFalsy = <A>(a: A): Option<NonNullable<A>> => (!a ? option(a) : none()) as Option<NonNullable<A>>;
 
   /**
    * `any: Option<A> -> Option<B> -> boolean`
