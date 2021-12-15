@@ -1005,7 +1005,7 @@ export class List<A> {
     return new List(res);
   }
 
-  countBy<B>(projection: (a: A) => B): List<[B, number]> {
+  countBy<B>(projection: (a: A) => B): Dict<B, number> {
     const map: Map<B, number> = new Map();
 
     for (const x of this._elements) {
@@ -1014,7 +1014,7 @@ export class List<A> {
       map.set(res, current + 1);
     }
 
-    return new List(Array.from(map.entries()));
+    return Dict.ofMap(map);
   }
 
   groupBy<B>(projection: (a: A) => B): Dict<B, List<A>> {
