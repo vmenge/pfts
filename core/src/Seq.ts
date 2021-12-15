@@ -7,12 +7,12 @@ import { pipe, Pipe } from "./pipe";
 
 /**
  * A lazy `List`.
- * 
+ *
  * ### WARNING!
  * Any of `Seq`'s instance methods that returns anything that is not a `Seq` will evaluate the lazy `List` inside the `Seq`.
  * Take that into consideration and consider using `toList()` if you need to use multiple methods that return types
  * other than `Seq`.
- * 
+ *
  * @see {@link List}
  */
 export class Seq<A> {
@@ -296,8 +296,8 @@ export class Seq<A> {
     return new Seq(() => this._lazyList().zip3(seq2._lazyList(), seq3._lazyList()));
   }
 
-  countBy<B>(projection: (a: A) => B): Seq<[B, number]> {
-    return new Seq(() => this._lazyList().countBy(projection));
+  countBy<B>(projection: (a: A) => B): Dict<B, number> {
+    return this._lazyList().countBy(projection);
   }
 
   groupBy<B>(projection: (a: A) => B): Dict<B, List<A>> {
