@@ -118,14 +118,6 @@ export class Seq<A> {
     return this._lazyList().eq(seq._lazyList());
   }
 
-  pipe<B>(fn: (a: Seq<A>) => B): B {
-    return fn(this);
-  }
-
-  toPipe(): Pipe<Seq<A>> {
-    return pipe(this);
-  }
-
   skipWhile(predicate: (a: A) => boolean): Seq<A> {
     return new Seq(() => this._lazyList().skipWhile(predicate));
   }
@@ -288,12 +280,16 @@ export class Seq<A> {
     return new Seq(() => this._lazyList().rev());
   }
 
-  zip(seq: Seq<A>): Seq<[A, A]> {
-    return new Seq(() => this._lazyList().zip(seq._lazyList()));
+  zip(seq: Seq<A>): Option<Seq<[A, A]>> {
+    return this._lazyList()
+      .zip(seq._lazyList())
+      .map(x => new Seq(() => x));
   }
 
-  zip3(seq2: Seq<A>, seq3: Seq<A>): Seq<[A, A, A]> {
-    return new Seq(() => this._lazyList().zip3(seq2._lazyList(), seq3._lazyList()));
+  zip3(seq2: Seq<A>, seq3: Seq<A>): Option<Seq<[A, A, A]>> {
+    return this._lazyList()
+      .zip3(seq2._lazyList(), seq3._lazyList())
+      .map(x => new Seq(() => x));
   }
 
   countBy<B>(projection: (a: A) => B): Dict<B, number> {
@@ -309,6 +305,21 @@ export class Seq<A> {
    */
   equivalent(seq: Seq<A>): boolean {
     return this._lazyList().equivalent(seq._lazyList());
+  }
+
+  /**
+   * `this: Seq<A>`
+   *
+   * `to: (Seq<A> -> B) -> B`
+   *
+   * ---
+   * Pipes this current `Seq` instance as an argument to the given function.
+   * @example
+   * const a = seq("one", "two").pipe(x => x.toList());
+   * expect(a).toBeInstanceOf(List);
+   */
+  to<B>(fn: (a: Seq<A>) => B): B {
+    return fn(this);
   }
 }
 

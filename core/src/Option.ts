@@ -45,7 +45,7 @@ export class Option<A> {
    * const x = Option.none();
    * expect(x.isNone).toEqual(true);
    */
-  static none = <T>(): Option<NonNullable<T>> => new Option<NonNullable<T>>();
+  static none = <T = never>(): Option<NonNullable<T>> => new Option<NonNullable<T>>();
 
   /**
    * @returns the value contained inside the `Option<A>`.
@@ -100,6 +100,10 @@ export class Option<A> {
    */
   get isNone(): boolean {
     return this._value === undefined || this._value === null;
+  }
+
+  *[Symbol.iterator](): Generator<Option<A>, A, any> {
+    return yield this;
   }
 
   /**
@@ -606,11 +610,11 @@ export class Option<A> {
   /**
    * `this: Option<A>`
    *
-   * `toAsyncOption: () -> AsyncOption<A>`
+   * `toAsync: () -> AsyncOption<A>`
    *
    * ---
    */
-  toAsyncOption(): AsyncOption<A> {
+  toAsync(): AsyncOption<A> {
     return new AsyncOption(async(this));
   }
 
@@ -642,34 +646,16 @@ export class Option<A> {
   /**
    * `this: Option<A>`
    *
-   * `pipe: (Option<A> -> B) -> B`
+   * `to: (Option<A> -> B) -> B`
    *
    * ---
-   * Takes an function to be executed on this current `Option` instance, facilitating function chaining.
+   * Pipes this current `Option` instance as an argument to the given function.
    * @example
    * const a = some("3").pipe(x => Number(x.value));
    * expect(a).toEqual(3);
    */
-  pipe<B>(fn: (a: Option<A>) => B): B {
+  to<B>(fn: (a: Option<A>) => B): B {
     return fn(this);
-  }
-
-  /**
-   * `this: Option<A>`
-   *
-   * `toPipe: (Option<A> -> B) -> Pipe<B>`
-   *
-   * ---
-   * Wraps the result of the function from the args in a `Pipe`.
-   * @example
-   * const a = some("3")
-   *   .toPipe(Option.value)
-   *   .return(Number);
-   *
-   * expect(a).toEqual(3);
-   */
-  toPipe<B>(fn: (o: Option<A>) => B): Pipe<B> {
-    return pipe(fn(this));
   }
 
   /**
@@ -1147,18 +1133,21 @@ export class Option<A> {
     return some(Seq.ofArray(result.flat()));
   };
 
-  /**
-   * Initiates a Option Computation.
-   * @example
-   * const res =
-   *   Option.ce()
-   *     .let('x', some(5))
-   *     .let('y', () => some(10))
-   *     .return(({ x, y }) => x + y);
-   *
-   * expect(res.value).toEqual(15);
-   */
-  static ce = () => new OptionComputation(some({}));
+  static ce = <A, B>(genFn: () => Generator<Option<A>, B, A>): Option<B> => {
+    const iterator = genFn();
+    let state = iterator.next();
+
+    function run(state: IteratorYieldResult<Option<A>> | IteratorReturnResult<B>): Option<B> {
+      if (state.done) {
+        return option(state.value);
+      }
+
+      const { value } = state;
+      return value.bind(val => run(iterator.next(val)));
+    }
+
+    return run(state);
+  };
 }
 
 /**

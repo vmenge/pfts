@@ -2,10 +2,9 @@ import { Async, async } from "./Async";
 import { AsyncOption } from "./AsyncOption";
 import { List } from "./List";
 import { Result, ok, err } from "./Result";
-import { Flatten, NonVoid } from "./type-utils";
 
-const normalize = <T, B>(
-  value: AsyncResult<T, B> | Async<Result<T, B>> | Async<T> | Result<T, B> | Promise<T> | Promise<Result<T, B>>
+const normalize = <T, B = never>(
+  value: AsyncResult<T, B> | Async<Result<T, B>> | Async<T> | Result<T, B> | Promise<Result<T, B>> | Promise<T> | T
 ): AsyncResult<T, B> => {
   if (value instanceof AsyncResult) {
     return value;
@@ -35,10 +34,14 @@ const normalize = <T, B>(
     return new AsyncResult(async(res));
   }
 
-  return new AsyncResult(async(value));
+  if (value instanceof Result) {
+    return new AsyncResult(async(value));
+  }
+
+  return new AsyncResult(async(ok(value)));
 };
 
-export class AsyncResult<A, B> {
+export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   constructor(private readonly raw: Async<Result<A, B>>) {}
 
   static ofAsync<A, B>(ar: Async<Result<A, B>>): AsyncResult<A, B> {
@@ -53,6 +56,17 @@ export class AsyncResult<A, B> {
     return new AsyncResult(async(r));
   }
 
+  then<TResult1 = Result<A, B>, TResult2 = never>(
+    onfulfilled?: ((value: Result<A, B>) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.raw.then(onfulfilled, onrejected);
+  }
+
+  *[Symbol.iterator](): Generator<AsyncResult<A, B>, A, any> {
+    return yield this;
+  }
+
   get isOk(): Async<boolean> {
     return this.raw.map(r => r.isOk);
   }
@@ -63,6 +77,14 @@ export class AsyncResult<A, B> {
 
   get value(): Async<A> {
     return this.raw.map(r => r.value);
+  }
+
+  /**
+   * @returns the `Err` value contained inside the `AsyncResult<A, B>`.
+   * @throws an Error if the `AsyncResult<A, B>` is `Ok`.
+   */
+  get err(): Async<B> {
+    return this.raw.map(r => r.err);
   }
 
   toAsync(): Async<Result<A, B>> {
@@ -111,11 +133,7 @@ export class AsyncResult<A, B> {
   }
 
   mapErr<C>(fn: (b: B) => C): AsyncResult<A, C> {
-    if (this.isErr) {
-      return normalize(this.raw.map(r => r.mapErr(fn)));
-    }
-
-    return this as any as AsyncResult<A, C>;
+    return normalize(this.raw.map(x => x.mapErr(fn)));
   }
 
   tee(fn: (a: A) => void): AsyncResult<A, B> {
@@ -188,6 +206,21 @@ export class AsyncResult<A, B> {
     );
   }
 
+  /**
+   * `this: Asyncresult<A, B>`
+   *
+   * `to: (AsyncResult<A, B> -> C) -> C`
+   *
+   * ---
+   * Pipes this current `AsyncOption` instance as an argument to the given function.
+   * @example
+   * const a = asyncResult("3").pipe(list);
+   * expect(a).toBeInstanceOf(List);
+   */
+  to<C>(fn: (a: AsyncResult<A, B>) => C): C {
+    return fn(this);
+  }
+
   static isOk = <A, B>(ar: AsyncResult<A, B> | Async<Result<A, B>>): Async<boolean> => normalize(ar).isOk;
 
   static isErr = <A, B>(ar: AsyncResult<A, B>): Async<boolean> => normalize(ar).isErr;
@@ -237,66 +270,27 @@ export class AsyncResult<A, B> {
     return new AsyncResult(b);
   };
 
-  static ce = <A, B>() => new AsyncResultComputation(new AsyncResult(async(ok<A, B>({} as A))));
-}
+  static ce = <A, B, C>(
+    genFn: () => Generator<AsyncResult<A, B> | Async<A> | Result<A, B>, C, A>
+  ): AsyncResult<C, B> => {
+    const iterator = genFn();
+    let state = iterator.next();
 
-class AsyncResultComputation<A extends Object, B> {
-  constructor(private readonly ctx: AsyncResult<A, B>) {}
-
-  public let<K extends string, T>(
-    k: K,
-    other:
-      | AsyncResult<T, B>
-      | Async<Result<T, B>>
-      | Promise<Result<T, B>>
-      | Async<T>
-      | Promise<T>
-      | Result<T, B>
-      | ((
-          ctx: A
-        ) =>
-          | AsyncResult<NonVoid<T>, B>
-          | Async<Result<NonVoid<T>, B>>
-          | Promise<Result<NonVoid<T>, B>>
-          | Async<NonVoid<T>>
-          | Promise<NonVoid<T>>
-          | Result<NonVoid<T>, B>)
-  ): AsyncResultComputation<A & { [k in K]: T }, B> {
-    const value = AsyncResult.bind((ctx: A) => {
-      const x = typeof other === "function" ? other(ctx) : other;
-
-      return normalize(x);
-    })(this.ctx);
-
-    const ctx = AsyncResult.map2((ctx: A, val: T) => ({ ...ctx, [k.toString()]: val }))(this.ctx)(value);
-
-    return new AsyncResultComputation(ctx as any);
-  }
-
-  public do(fn: (ctx: A) => Promise<void> | Async<void> | void): AsyncResultComputation<A, B> {
-    const ctx = this.ctx.toAsync().promise.then(ctx => {
-      if (ctx.isErr) return ctx;
-
-      const res = fn(ctx.value);
-
-      if (res instanceof Async || res instanceof Promise) {
-        const promise: Promise<void> = res instanceof Async ? res.promise : (res as Promise<void>);
-        const ctx = promise.then(_ => this.ctx.toAsync().promise);
-
-        return ctx;
+    function run(
+      state: IteratorYieldResult<AsyncResult<A, B> | Async<A> | Result<A, B>> | IteratorReturnResult<C>
+    ): AsyncResult<C, B> {
+      if (state.done) {
+        return AsyncResult.ofResult(ok(state.value));
       }
 
-      return ctx;
-    });
+      const { value } = state;
+      return normalize(value).bind(val => run(iterator.next(val)));
+    }
 
-    return new AsyncResultComputation(AsyncResult.ofPromise(ctx));
-  }
-
-  public return<T>(fn: (ctx: A) => T): AsyncResult<T, B> {
-    return AsyncResult.map(fn)(this.ctx) as AsyncResult<T, B>;
-  }
-
-  public ignore(): Async<void> {
-    return AsyncResult.iter(_ => {})(this.ctx);
-  }
+    return run(state);
+  };
 }
+
+export const asyncResult = <T, B = never>(
+  val: AsyncResult<T, B> | Async<Result<T, B>> | Async<T> | Result<T, B> | Promise<Result<T, B>> | Promise<T> | T
+) => normalize(val);

@@ -107,6 +107,10 @@ export class Result<A, B> {
     return this._val as B;
   }
 
+  *[Symbol.iterator](): Generator<Result<A, B>, A, any> {
+    return yield this;
+  }
+
   /**
    * `this: Result<A, B>`
    *
@@ -195,6 +199,26 @@ export class Result<A, B> {
     if (this.isOk) {
       fn(this._val as A);
     }
+  }
+
+  /**
+   * `this: Result<A, B>`
+   *
+   * `iterErr: (B -> ()) -> ()`
+   *
+   * ---
+   * Executes the given function against the `Err` value of `Result<A, B>` if it is `Err`.
+   * @param fn a function that typically executes a side effect.
+   * @example
+   * err("oops").iterErr(x => console.log(x)); // prints "oops"
+   * ok("hello").iterErr(x => console.log(x)); // doesn't print
+   */
+  iterErr(fn: (b: B) => void): Result<A, B> {
+    if (this.isErr) {
+      fn(this._val as B);
+    }
+
+    return this;
   }
 
   /**
@@ -664,34 +688,16 @@ export class Result<A, B> {
   /**
    * `this: Result<A, B>`
    *
-   * `pipe: (Result<A, B> -> C) -> C`
+   * `to: (Result<A, B> -> C) -> C`
    *
    * ---
-   * Takes an function to be executed on this current `Result` instance, facilitating function chaining.
+   * Pipes this current `Result` instance as an argument to the given function.
    * @example
    * const a = ok("3").pipe(x => Number(x.value));
    * expect(a).toEqual(3);
    */
-  pipe<C>(fn: (a: Result<A, B>) => C): C {
+  to<C>(fn: (a: Result<A, B>) => C): C {
     return fn(this);
-  }
-
-  /**
-   * `this: Result<A, B>`
-   *
-   * `toPipe: (Result<A, B> -> C) -> Pipe<C>`
-   *
-   * ---
-   * Wraps the result of the function from the args in a `Pipe`.
-   * @example
-   * const a = ok("3")
-   *   .toPipe(Result.value)
-   *   .return(Number);
-   *
-   * expect(a).toEqual(3);
-   */
-  toPipe<C>(fn: (r: Result<A, B>) => C): Pipe<C> {
-    return pipe(fn(this));
   }
 
   /**
@@ -994,18 +1000,21 @@ export class Result<A, B> {
   static sequenceSeq = <A, B>(rs: Seq<Result<A, B>>): Result<Seq<A>, B> =>
     Result.sequenceList(rs.toList()).map(Seq.ofList);
 
-  /**
-   * Initiates a Result Computation.
-   * @example
-   * const res =
-   *   Result.ce()
-   *     .let('x', ok(5))
-   *     .let('y', () => ok(10))
-   *     .return(({ x, y }) => x + y);
-   *
-   * expect(res.value).toEqual(15);
-   */
-  static ce = <A, B>() => new ResultComputation(ok<A, B>({} as any as A));
+  static ce = <A, B, C>(genFn: () => Generator<Result<A, B>, C, A>): Result<C, B> => {
+    const iterator = genFn();
+    let state = iterator.next();
+
+    function run(state: IteratorYieldResult<Result<A, B>> | IteratorReturnResult<C>): Result<C, B> {
+      if (state.done) {
+        return ok(state.value);
+      }
+
+      const { value } = state;
+      return value.bind(val => run(iterator.next(val)));
+    }
+
+    return run(state);
+  };
 }
 
 /**

@@ -1,4 +1,4 @@
-import { async, Async, list, some, Option, ok, err, Result } from "@pfts/core";
+import { async, Async, list, some, Option, ok, err, Result } from "@pfts/core/src";
 
 describe("Async", () => {
   describe("Async.new()", () => {
@@ -36,9 +36,9 @@ describe("Async", () => {
     });
   });
 
-  describe(".toPromise()", () => {
+  describe(".promise", () => {
     it("Returns the inner Promise<number> inside an Async<number>", done => {
-      const val = async(5).toPromise();
+      const val = async(5).promise;
 
       expect(val).toBeInstanceOf(Promise);
 
@@ -127,12 +127,10 @@ describe("Async", () => {
 
   describe(".tee()", () => {
     it("Returns the same instance of Async<A> after executing a side-effectful method", done => {
-      async(666)
-        .tee(x => console.log(`.tee() called with value ${x}`))
-        .iter(x => {
-          expect(x).toEqual(666);
-          done();
-        });
+      async(666).iter(x => {
+        expect(x).toEqual(666);
+        done();
+      });
     });
   });
 
@@ -283,32 +281,34 @@ describe("Async", () => {
   });
 
   describe("Async.ce()", () => {
-    it(".let bindings work correctly", done => {
-      const res = Async.ce()
-        .let("a", async(1))
-        .let("b", () => async(2))
-        .let("c", Promise.resolve(3))
-        .let("d", () => Promise.resolve(4))
-        .return(ctx => ctx);
+    it("Works correctly", done => {
+      const res = Async.ce(function* () {
+        const a = yield* async(5);
+        const b = yield* async(10);
+        const c = yield* async(15);
+
+        return a + b + c;
+      });
 
       res.iter(x => {
-        expect(x).toEqual({ a: 1, b: 2, c: 3, d: 4 });
+        expect(x).toEqual(30);
         done();
       });
     });
+  });
 
-    it(".do executes side effects", done => {
-      const obj = { value: 0 };
+  describe("implements PromiseLike", () => {
+    it("Works correctly", done => {
+      const res = (async () => {
+        const a = await async(5);
+        const b = await async(10);
+        const c = await async(15);
 
-      const res = Async.ce()
-        .do(() => Async.sleep(10))
-        .do(async () => {
-          obj.value = 10;
-        })
-        .ignore();
+        return a + b + c;
+      })();
 
-      res.iter(() => {
-        expect(obj.value).toEqual(10);
+      res.then(x => {
+        expect(x).toEqual(30);
         done();
       });
     });

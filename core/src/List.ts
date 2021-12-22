@@ -756,7 +756,7 @@ export class List<A> {
    * `distinct: () -> List<A>`
    *
    * ---
-   *  Returns a `List<A>` that contains no duplicate entries
+   * Returns a `List<A>` that contains no duplicate entries
    * @example
    * const actual = list(1, 1, 2, 2, 3).distinct();
    * const expected = list(1, 2, 3);
@@ -800,26 +800,63 @@ export class List<A> {
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `append: List<A> -> List<A>`
+   *
+   * ---
    * Returns a new list that contains the elements of the first list followed by elements of the second.
+   * @example
+   * const actual = list(1, 2).append(list(3, 4));
+   * const expected = list(1, 2, 3, 4);
+   * exepect(actual.eq(expected)).toEqual(true);
    */
   append(list: List<A>): List<A> {
     return List.new(...this._elements, ...list._elements);
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `exists: (A -> boolean) -> boolean`
+   *
+   * ---
    * Tests if any element of the list satisfies the given predicate.
+   * @example
+   * const a = list(1, 2, 3).exists(x => x === 2);
+   * expect(a).toEqual(true);
    */
   exists(predicate: (a: A) => boolean): boolean {
     return this._elements.some(predicate);
   }
 
   /**
-   *  Returns the first element for which the given function returns True. Return None if no such element exists.
+   * `this: List<A>`
+   *
+   * `find: (A -> boolean) -> Option<A>`
+   *
+   * ---
+   * Returns the first element for which the given function returns `true`. Returns `None` if no such element exists.
+   * @example
+   * const a = list(1, 2, 3).find(x => x === 2);
+   * expect(a.isSome).toEqual(true);
+   * expect(a.value).toEqual(2);
    */
   find(predicate: (a: A) => boolean): Option<A> {
     return option(this._elements.find(predicate));
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `findIndex: (A -> boolean) -> Option<number>`
+   *
+   * ---
+   * @example
+   * const a = list("f", "g", "h").findIndex(x => x === "h");
+   * expect(a.isSome).toEqual(true);
+   * expect(a.value).toEqual(2);
+   */
   findIndex(predicate: (a: A) => boolean): Option<number> {
     const idx = this._elements.findIndex(predicate);
     if (idx === -1) return none();
@@ -828,23 +865,71 @@ export class List<A> {
   }
 
   /**
-   *  Tests if all elements of the collection satisfy the given predicate.
+   * `this: List<A>`
+   *
+   * `forall: (A -> boolean) -> boolean`
+   *
+   * ---
+   * Tests if all elements of the collection satisfy the given predicate.
+   * @example
+   * const a = list(2, 4, 6, 8).forall(x => x % 2 === 0);
+   * expect(a).toEqual(true);
    */
   forall(predicate: (a: A) => boolean): boolean {
     return this._elements.every(predicate);
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `head: () -> Option<A>`
+   *
+   * ---
+   * @returns the first element of the list, if it is not empty.
+   * @example
+   * const a = list(3, 2, 1).head();
+   * expect(a.value).toEqual(3);
+   *
+   * const b = list().head();
+   * expect(b.isNone).toEqual(true);
+   */
   head(): Option<A> {
     return option(this._elements[0]);
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `tail: () -> List<A>`
+   *
+   * ---
    * Returns the list after removing the first element.
+   * @example
+   * const actual1 = list(1, 2, 3).tail();
+   * const expected1 = list(2, 3);
+   * expect(actual1.eq(expected1)).toEqual(true);
+   *
+   * const actual2 = list(5).tail();
+   * expect(actual2.isEmpty).toEqual(true);
    */
   tail(): List<A> {
     return this.skip(1);
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `last: () -> Option<A>`
+   *
+   * ---
+   * @returns the last element of the list, if it is not empty.
+   * @example
+   * const a = list(3, 2, 1).last();
+   * expect(a.value).toEqual(1);
+   *
+   * const b = list().last();
+   * expect(b.isNone).toEqual(true);
+   */
   last(): Option<A> {
     if (this.length < 1) {
       return none();
@@ -853,10 +938,42 @@ export class List<A> {
     return option(this._elements[this.length - 1]);
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `sort: () -> List<A>`
+   *
+   * ---
+   * Returns a new list with its elements sorted.
+   * @example
+   * const actual = list(4, 1, 8).sort();
+   * const expected = list(1, 4, 8);
+   *
+   * expect(actual.eq(expected)).toEqual(true);
+   */
   sort(): List<A> {
     return new List([...this._elements].sort());
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `sortBy: (A -> B) -> List<A>`
+   *
+   * ---
+   * @example
+   * const ppl = list(
+   *   { name: 'john', age: 30 }, { name: 'jane', age: 28 }
+   * );
+   *
+   * const actual = ppl.sortBy(p => p.age);
+   *
+   * const expected = list(
+   *   { name: 'jane', age: 28 }, { name: 'john', age: 30 }
+   * );
+   *
+   * expect(actual.eqBy(expected, JSON.stringify)).toEqual(true);
+   */
   sortBy<B>(projection: (a: A) => B): List<A> {
     return new List(
       [...this._elements].sort((a, b) => {
@@ -874,14 +991,47 @@ export class List<A> {
     );
   }
 
-  sortWith(comparison: (a: A, b: A) => number): List<A> {
+  /**
+   * `this: List<A>`
+   *
+   * `sortWith: ((A, A) -> number) -> List<A>`
+   *
+   * ---
+   * @param comparison Function used to determine the order of the elements. It is expected
+   * to return a negative value if the first argument is less than the second argument, zero if they're equal,
+   * and a positive value otherwise.
+   */
+  sortWith(comparison: (a1: A, a2: A) => number): List<A> {
     return new List([...this._elements].sort(comparison));
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `max: () -> Option<A>`
+   *
+   * ---
+   * @example
+   * const a = list(2, 5, 1).max();
+   * expect(a.value).toEqual(5);
+   */
   max(): Option<A> {
     return this.sort().last();
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `maxBy: (A -> B) -> Option<A>`
+   *
+   * ---
+   * @example
+   * const ppl = list({ name: 'john', age: 30 }, { name: 'jane', age: 28 });
+   * const actual = ppl.maxBy(p => p.age);
+   * const expected = { name: 'john', age: 30 };
+   *
+   * expect(actual).toEqual(expected)
+   */
   maxBy<B>(projection: (a: A) => B): Option<A> {
     if (this._elements.length < 1) {
       return none();
@@ -890,10 +1040,33 @@ export class List<A> {
     return this.sortBy(projection).last();
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `min: () -> Option<A>`
+   *
+   * ---
+   * @example
+   * const a = list(2, 5, 1).min();
+   * expect(a.value).toEqual(1);
+   */
   min(): Option<A> {
     return this.sort().head();
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `minBy: (A -> B) -> Option<A>`
+   *
+   * ---
+   * @example
+   * const ppl = list({ name: 'john', age: 30 }, { name: 'jane', age: 28 });
+   * const actual = ppl.minBy(p => p.age);
+   * const expected = { name: 'jane', age: 28 };
+   *
+   * expect(actual).toEqual(expected)
+   */
   minBy<B>(projection: (a: A) => B): Option<A> {
     if (this._elements.length < 1) {
       return none();
@@ -902,14 +1075,50 @@ export class List<A> {
     return this.sortBy(projection).head();
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `sumBy: (A -> number) -> number`
+   *
+   * ---
+   * @example
+   * const ppl = list({ name: 'john', age: 30 }, { name: 'jane', age: 28 });
+   * const actual = ppl.sumBy(p => p.age);
+   *
+   * expect(actual).toEqual(58)
+   */
   sumBy(projection: (a: A) => number): number {
     return this.fold((sum, current) => sum + projection(current), 0);
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `averageBy: (A -> number) -> number`
+   *
+   * ---
+   * @example
+   * const ppl = list({ name: 'john', age: 30 }, { name: 'jane', age: 70 });
+   * const actual = ppl.averageBy(p => p.age);
+   *
+   * expect(actual).toEqual(50)
+   */
   averageBy(projection: (a: A) => number): number {
     return this.fold((sum, current) => sum + projection(current), 0) / this.length;
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `pairwise: () -> List<A * A>`
+   *
+   * ---
+   * @example
+   * const actual = list(1, 2, 3, 4).pairwise();
+   * const expected = list([1, 2], [2, 3], [3, 4]);
+   *
+   * expect(actual.eq(expected)).toEqual(true);
+   */
   pairwise(): List<[A, A]> {
     let result: [A, A][] = [];
 
@@ -921,8 +1130,20 @@ export class List<A> {
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `partition: (A -> boolean) -> List<A> * List<A>`
+   *
+   * ---
    * Splits the list into two lists, containing the elements for which the given predicate returns True and False respectively. Element order is preserved in both of the created lists.
    * @returns a tuple with a list of elements that pass the predicate and a list of elements that fail the predicate.
+   * @example
+   * const [even, odd] = list(1, 2, 3, 4).partition(x => x % 2 === 0);
+   * const expectedEven = list(2, 4);
+   * const expectedOdd = list(1, 3);
+   *
+   * expect(even.eq(expectedEven)).toEqual(true);
+   * expect(odd.eq(expectedOdd)).toEqual(true);
    */
   partition(predicate: (a: A) => boolean): [List<A>, List<A>] {
     let trues = [];
@@ -940,23 +1161,73 @@ export class List<A> {
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `except: List<A> -> List<A>`
+   *
+   * ---
    * Returns a new list with the distinct elements of the input list which do not appear in the itemsToExclude list.
+   * @example
+   * const actual = list(1, 2, 3, 4, 5).except(list(2, 5));
+   * const expected = list(1, 3, 4);
+   * expect(actual.eq(expected)).toEqual(true);
    */
   except(itemsToExclude: List<A>): List<A> {
-    return this.distinct().reject(x => itemsToExclude.contains(x));
+    const toExclude = new Map<A, boolean>();
+
+    for (const el of itemsToExclude) {
+      toExclude.set(el, true);
+    }
+
+    return this.distinct().reject(x => toExclude.has(x));
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `indexed: () -> List<number * A>`
+   *
+   * ---
    * Returns a new list with its elements paired with their index (from 0).
+   * @example
+   * const actual = list("a", "b", "c").indexed();
+   * const expected = list([0, "a"], [1, "b"], [2, "c"]);
+   *
+   * expect(actual.eq(expected)).toEqual(true);
    */
   indexed(): List<[number, A]> {
     return new List(this._elements.map((x, i) => [i, x] as [number, A]));
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `item: number -> Option<A>`
+   *
+   * ---
+   * Returns the item at the given `index`.
+   * @example
+   * const a = list("x", "y", "z").item(1);
+   * expect(a.value).toEqual("y");
+   *
+   * const b = list("c", "v", "b").item(4);
+   * expect(b.isNone).toEqual(true);
+   */
   item(index: number): Option<A> {
     return option(this._elements[index]);
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `pick: (A -> Option<B>) -> Option<B>`
+   *
+   * ---
+   * Returns the first element of a list for which the given function returns `Some`.
+   * @example
+   * const a = list("a", "b", "5", "c").pick(Num.parse);
+   * expect(a.value).toEqual(5);
+   */
   pick<B>(fn: (a: A) => Option<B>): Option<B> {
     for (const x of this._elements) {
       const res = fn(x);
@@ -966,6 +1237,13 @@ export class List<A> {
     return none();
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `trace: (string | undefined) -> List<A>`
+   *
+   * ---
+   */
   trace(msg?: string): List<A> {
     const logStr = msg ? `${msg} ${this}` : `${this}`;
     console.log(logStr);
@@ -973,13 +1251,26 @@ export class List<A> {
     return this;
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `rev: () -> List<A>`
+   *
+   * ---
+   * @returns a reversed copy of the list.
+   * @example
+   * const actual = list(1, 2, 3).rev();
+   * const expected = list(3, 2, 1);
+   *
+   * expect(actual.eq(expected)).toEqual(true);
+   */
   rev(): List<A> {
     return new List([...this._elements].reverse());
   }
 
-  zip(list: List<A>): List<[A, A]> {
+  zip(list: List<A>): Option<List<[A, A]>> {
     if (this.length !== list.length) {
-      throw new Error("Only lists that have equal length can be zipped.");
+      return none();
     }
 
     let res: [A, A][] = [];
@@ -988,12 +1279,12 @@ export class List<A> {
       res.push([this._elements[i], list._elements[i]]);
     }
 
-    return new List(res);
+    return some(new List(res));
   }
 
-  zip3(list2: List<A>, list3: List<A>): List<[A, A, A]> {
+  zip3(list2: List<A>, list3: List<A>): Option<List<[A, A, A]>> {
     if (this.length !== list2.length || list2.length !== list3.length) {
-      throw new Error("Only lists that have equal length can be zipped.");
+      return none();
     }
 
     let res: [A, A, A][] = [];
@@ -1002,9 +1293,22 @@ export class List<A> {
       res.push([this._elements[i], list2._elements[i], list3._elements[i]]);
     }
 
-    return new List(res);
+    return some(new List(res));
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `countBy: (A -> B) -> Dict<B, number>`
+   *
+   * ---
+   * @example
+   * const ppl = list(
+   *   { name: "ann", age: 30 }, { name: "john", age: 31 }, { name: "ann", age: 42 }
+   * );
+   * const pplCount = ppl.countBy(p => p.name);
+   * expect(pplCount.find("ann").value).toEqual(2);
+   */
   countBy<B>(projection: (a: A) => B): Dict<B, number> {
     const map: Map<B, number> = new Map();
 
@@ -1017,6 +1321,19 @@ export class List<A> {
     return Dict.ofMap(map);
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `groupBy: (A -> B) -> Dict<B, List<A>>`
+   *
+   * ---
+   * @example
+   * const ppl = list(
+   *   { name: "ann", age: 30 }, { name: "john", age: 31 }, { name: "ann", age: 42 }
+   * );
+   * const nameGroups = ppl.countBy(p => p.name);
+   * expect(pplCount.find("ann").value).toEqual(2);
+   */
   groupBy<B>(projection: (a: A) => B): Dict<B, List<A>> {
     const map: Map<B, List<A>> = new Map();
 
@@ -1030,17 +1347,79 @@ export class List<A> {
   }
 
   /**
-   * Returns true if the lists contains the same elements regardless of order.
+   * `this: List<A>`
+   *
+   * `equivalent: List<A> -> boolean`
+   *
+   * ---
+   * @returns true if the lists contains the same elements regardless of order.
+   * @example
+   * const a = list(1, 2, 3).equivalent(list(3, 2, 1));
+   * expect(a).toEqual(true);
    */
   equivalent(list: List<A>): boolean {
     if (this.length !== list.length) return false;
 
-    return this._elements.every(x => {
-      const count1 = this._elements.filter(y => y === x).length;
-      const count2 = list._elements.filter(y => y === x).length;
+    const lst1 = new Map<A, number>();
+    const lst2 = new Map<A, number>();
 
-      return count1 === count2;
-    });
+    for (const x of this) {
+      const count = lst1.get(x) ?? 0;
+      lst1.set(x, count + 1);
+    }
+
+    for (const x of list) {
+      const count = lst2.get(x) ?? 0;
+      lst2.set(x, count + 1);
+    }
+
+    if (lst1.size !== lst2.size) return false;
+
+    for (const [key, val] of lst1) {
+      if (lst2.get(key) !== val) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * `this: List<A>`
+   *
+   * `to: (List<A> -> B) -> B`
+   *
+   * ---
+   * Pipes this current `List` instance as an argument to the given function.
+   * @example
+   * const a = list("one", "two").pipe(x => x.length);
+   * expect(a).toEqual(2);
+   */
+  to<B>(fn: (a: List<A>) => B): B {
+    return fn(this);
+  }
+
+  /**
+   * `this: List<A>`
+   *
+   * `join: (string | undefined) -> string`
+   *
+   * ---
+   * Adds all the elements of the list into a string, separated by the specified separator string.
+   */
+  join(separator?: string): string {
+    return this._elements.join(separator);
+  }
+
+  /**
+   * `empty: () -> List<A>`
+   *
+   * ---
+   * @returns an empty `List<A>`.
+   * @example
+   * const a = List.empty();
+   * expect(a.isEmpty).toEqual(true);
+   */
+  static empty<A>(): List<A> {
+    return list();
   }
 
   static rejectNones<B>(optList: List<Option<B>>): List<B> {
@@ -1087,7 +1466,14 @@ export class List<A> {
   }
 
   /**
+   * `init: number -> (number -> B) -> List<B>`
+   *
+   * ---
    * Creates a list by calling the given initializer on each index.
+   * @example
+   * const actual = List.init(3)(n => n.toString());
+   * const expected = list("0", "1", "2");
+   * expect(actual.eq(expected)).toEqual(true);
    */
   static init =
     <B>(count: number) =>
@@ -1095,6 +1481,15 @@ export class List<A> {
       return List.range(0, count - 1).map(initializer);
     };
 
+  /**
+   * `replicate: number -> B -> List<B>`
+   *
+   * ---
+   * @example
+   * const actual = List.replicate(3)("z");
+   * const expected = list("z", "z", "z");
+   * expect(actual.eq(expected)).toEqual(true);
+   */
   static replicate =
     <B>(count: number) =>
     (value: B): List<B> => {
