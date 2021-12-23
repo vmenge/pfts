@@ -2,6 +2,7 @@ import { Async, async } from "./Async";
 import { AsyncResult } from "./AsyncResult";
 import { List } from "./List";
 import { Option, none, option } from "./Option";
+import { err, ok, Result } from "./Result";
 
 const normalize = <T>(
   value: AsyncOption<T> | Async<Option<T>> | Async<T> | Option<T> | Promise<Option<T>> | Promise<T> | T
@@ -506,6 +507,19 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
     const b = Async.sequenceList(a).map(x => Option.sequenceList(x));
 
     return new AsyncOption(b);
+  }
+
+  static sequenceResult<A, B>(rao: Result<AsyncOption<A>, B>): AsyncOption<Result<A, B>>;
+  static sequenceResult<A, B>(rao: Result<Async<Option<A>>, B>): AsyncOption<Result<A, B>>;
+  static sequenceResult<A, B>(rao: Result<Promise<Option<A>>, B>): AsyncOption<Result<A, B>>;
+  static sequenceResult<A, B>(
+    rao: Result<AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>, B>
+  ): AsyncOption<Result<A, B>> {
+    if (rao.isErr) {
+      return new AsyncOption(async(option(err(rao.err))));
+    }
+
+    return normalize(rao.raw as AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>).map(ok);
   }
 
   /**
