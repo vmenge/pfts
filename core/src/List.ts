@@ -154,7 +154,7 @@ export class List<A> {
    * `choose: (A -> Option<B>) -> List<B>`
    *
    * ---
-   * The equivalent of calling `filter` and then `map` on a `List<A>`.
+   * The equivalent of calling `map` and then `filter` on a `List<A>`.
    * @param fn a function that returns an `Option<B>` from each element of the `List<A>`
    * @returns a `List<B>` only with the elements that returned `Some` when `fn` was applied.
    * @example
@@ -184,22 +184,23 @@ export class List<A> {
    * `choose: (A -> AsyncOption<B>) -> Async<List<B>>`
    *
    * ---
-   * The equivalent of calling `filter` and then `map` on a `List<A>`.
+   * The equivalent of calling `map` and then `filter` on a `List<A>`.
    * @param fn a function that returns an `AsyncOption<B>` from each element of the `List<A>`
    * @returns a `List<B>` only with the elements that returned `Some` when `fn` was applied.
    * @example
-   * list(1, 2, 3, 4)
-   *   .chooseAsync(x => {
-   *     if(x % 2 === 0) {
-   *       return some(x + 10).toAsyncOption();
-   *     }
+   * async () => {
+   *   const actual = await list(1, 2, 3, 4)
+   *     .chooseAsync(x => {
+   *       if(x % 2 === 0) {
+   *         return asyncOption(x + 10);
+   *       }
    *
-   *     return none().toAsyncOption();
-   *   })
-   *   .iter(actual => {
-   *     const expected = list(12, 14);
-   *     expect(actual.eq(expected)).toEqual(true);
-   *   })
+   *       return none().toAsyncOption();
+   *     });
+   *
+   *   const expected = list(12, 14);
+   *   expect(actual.eq(expected)).toEqual(true);
+   * }
    */
   chooseAsync<B>(fn: (a: A) => AsyncOption<B>): Async<List<B>>;
   /**
@@ -208,22 +209,23 @@ export class List<A> {
    * `choose: (A -> Async<Option<B>>) -> Async<List<B>>`
    *
    * ---
-   * The equivalent of calling `filter` and then `map` on a `List<A>`.
+   * The equivalent of calling `map` and then `filter` on a `List<A>`.
    * @param fn a function that returns an `Async<Option<B>>` from each element of the `List<A>`
    * @returns a `List<B>` only with the elements that returned `Some` when `fn` was applied.
    * @example
-   * list(1, 2, 3, 4)
-   *   .chooseAsync(x => {
-   *     if(x % 2 === 0) {
-   *       return async(some(x + 10));
-   *     }
+   * async () => {
+   *   const actual = await list(1, 2, 3, 4)
+   *     .chooseAsync(x => {
+   *       if(x % 2 === 0) {
+   *         return async(some(x + 10));
+   *       }
    *
-   *     return async(none());
-   *   })
-   *   .iter(actual => {
-   *     const expected = list(12, 14);
-   *     expect(actual.eq(expected)).toEqual(true);
-   *   })
+   *       return async(none());
+   *     });
+   *
+   *   const expected = list(12, 14);
+   *   expect(actual.eq(expected)).toEqual(true);
+   * }
    */
   chooseAsync<B>(fn: (a: A) => Async<Option<B>>): Async<List<B>>;
   /**
@@ -232,22 +234,23 @@ export class List<A> {
    * `choose: (A -> Promise<Option<B>>) -> Async<List<B>>`
    *
    * ---
-   * The equivalent of calling `filter` and then `map` on a `List<A>`.
+   * The equivalent of calling `map` and then `filter` on a `List<A>`.
    * @param fn a function that returns an `Promise<Option<B>>` from each element of the `List<A>`
    * @returns a `List<B>` only with the elements that returned `Some` when `fn` was applied.
    * @example
-   * list(1, 2, 3, 4)
-   *   .choose(x => {
-   *     if(x % 2 === 0) {
-   *       return Promise.resolve(some(x + 10));
-   *     }
+   * async () => {
+   *   const actual = await list(1, 2, 3, 4)
+   *     .chooseAsync(x => {
+   *       if(x % 2 === 0) {
+   *         return Promise.resolve(some(x + 10));
+   *       }
    *
-   *     return Promise.resolve(none());
-   *   })
-   *   .iter(actual => {
-   *     const expected = list(12, 14);
-   *     expect(actual.eq(expected)).toEqual(true);
-   *   })
+   *       return Promise.resolve(none());
+   *     });
+   *
+   *   const expected = list(12, 14);
+   *   expect(actual.eq(expected)).toEqual(true);
+   * }
    */
   chooseAsync<B>(fn: (a: A) => Promise<Option<B>>): Async<List<B>>;
   chooseAsync<B>(fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>): Async<List<B>> {

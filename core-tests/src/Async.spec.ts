@@ -272,11 +272,21 @@ describe("Async", () => {
   });
 
   describe("Async.flatten()", () => {
-    it("Flattens a Async<Async<nuymber>> into a Async<number>", done => {
+    it("Flattens a Async<Async<number>> into a Async<number>", done => {
       Async.flatten(async(async(5))).iter(x => {
         expect(x).toEqual(5);
         done();
       });
+    });
+  });
+
+  describe("Async.sequenceOption()", () => {
+    it("Sequences an Option<Async<number>> into a Async<Option<number>>", done => {
+      const a = some(async(5));
+      const b = Async.sequenceOption(a);
+
+      expect(b).toBeInstanceOf(Async);
+      b.iter(x => expect(x).toBeInstanceOf(Option)).iter(done);
     });
   });
 

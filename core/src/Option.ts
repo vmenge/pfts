@@ -610,11 +610,11 @@ export class Option<A> {
   /**
    * `this: Option<A>`
    *
-   * `toAsync: () -> AsyncOption<A>`
+   * `toAsyncOption: () -> AsyncOption<A>`
    *
    * ---
    */
-  toAsync(): AsyncOption<A> {
+  toAsyncOption(): AsyncOption<A> {
     return new AsyncOption(async(this));
   }
 
