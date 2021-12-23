@@ -17,11 +17,9 @@ export class Async<A> implements PromiseLike<A> {
   private constructor(value: A | Promise<A>) {
     if (value instanceof Promise) {
       this.promise = value;
+    } else {
+      this.promise = Promise.resolve(value);
     }
-
-    Promise.resolve(5).then();
-
-    this.promise = Promise.resolve(value);
   }
 
   /**
@@ -495,6 +493,8 @@ export class Async<A> implements PromiseLike<A> {
 
     return run(state);
   };
+
+  static run = <A>(fn: () => Promise<A>): Async<A> => async(fn());
 }
 
 /**

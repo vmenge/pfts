@@ -189,7 +189,7 @@ export class List<A> {
    * @returns a `List<B>` only with the elements that returned `Some` when `fn` was applied.
    * @example
    * list(1, 2, 3, 4)
-   *   .choose(x => {
+   *   .chooseAsync(x => {
    *     if(x % 2 === 0) {
    *       return some(x + 10).toAsyncOption();
    *     }
@@ -213,7 +213,7 @@ export class List<A> {
    * @returns a `List<B>` only with the elements that returned `Some` when `fn` was applied.
    * @example
    * list(1, 2, 3, 4)
-   *   .choose(x => {
+   *   .chooseAsync(x => {
    *     if(x % 2 === 0) {
    *       return async(some(x + 10));
    *     }

@@ -548,6 +548,15 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
 
     return run(state);
   };
+
+  static run<A>(fn: () => Async<Option<A>>): AsyncOption<A>;
+  static run<A>(fn: () => Promise<Option<A>>): AsyncOption<A>;
+  static run<A>(fn: () => Promise<Option<A>> | Async<Option<A>>): AsyncOption<A> {
+    const x = fn();
+    const y = x instanceof Promise ? async(x) : x;
+
+    return new AsyncOption(y);
+  }
 }
 
 /**

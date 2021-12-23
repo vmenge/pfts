@@ -289,6 +289,15 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
 
     return run(state);
   };
+
+  static run<A, B>(fn: () => Async<Result<A, B>>): AsyncResult<A, B>;
+  static run<A, B>(fn: () => Promise<Result<A, B>>): AsyncResult<A, B>;
+  static run<A, B>(fn: () => Promise<Result<A, B>> | Async<Result<A, B>>): AsyncResult<A, B> {
+    const x = fn();
+    const y = x instanceof Promise ? async(x) : x;
+
+    return new AsyncResult(y);
+  }
 }
 
 export const asyncResult = <T, B = never>(
