@@ -1,7 +1,6 @@
 import { async } from "./Async";
 import { AsyncOption } from "./AsyncOption";
 import { list, List } from "./List";
-import { pipe, Pipe } from "./pipe";
 import { err, ok, Result } from "./Result";
 import { Seq, seq } from "./Seq";
 

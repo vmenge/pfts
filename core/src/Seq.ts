@@ -1,9 +1,6 @@
-import { Async } from "./Async";
-import { AsyncOption } from "./AsyncOption";
 import { Dict } from "./Dict";
-import { List, list } from "./List";
+import { List } from "./List";
 import { Option } from "./Option";
-import { pipe, Pipe } from "./pipe";
 
 /**
  * A lazy `List`.

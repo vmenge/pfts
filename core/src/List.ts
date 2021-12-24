@@ -1,5 +1,3 @@
-import { compose } from "./compose";
-import { pipe, Pipe } from "./pipe";
 import { none, option, Option, some } from "./Option";
 import { add, greaterThan, lessThan, not, subt } from "./utils";
 import { Result } from "./Result";
@@ -587,39 +585,6 @@ export class List<A> {
 
   toJSON(): A[] {
     return this._elements;
-  }
-
-  /**
-   * `this: List<A>`
-   *
-   * `pipe: (List<A> -> B) -> B`
-   *
-   * ---
-   * Takes an function to be executed on this current `List` instance, facilitating function chaining.
-   * @example
-   * const a = list(1, 2, 3).pipe(List.sum);
-   * expect(a).toEqual(6);
-   */
-  pipe<B>(fn: (a: List<A>) => B): B {
-    return fn(this);
-  }
-
-  /**
-   * `this: List<A>`
-   *
-   * `toPipe: (List<A> -> B) -> Pipe<B>`
-   *
-   * ---
-   * Wraps the result of the function from the args in a `Pipe`.
-   * @example
-   * const a = list(1, 2, 3)
-   *   .toPipe(List.sum)
-   *   .return(x => `sum is: ${x}`);
-   *
-   * expect(a).toEqual("sum is 6");
-   */
-  toPipe<B>(fn: (lst: List<A>) => B): Pipe<B> {
-    return pipe(fn(this));
   }
 
   /**

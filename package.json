@@ -6,6 +6,6 @@
   ],
   "scripts": {
     "pub:core": "cd core && yarn pub",
-    "test": "cd core-tests && jest"
+    "test": "cd core-tests && jest --watch"
   }
 }

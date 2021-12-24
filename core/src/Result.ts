@@ -1,7 +1,7 @@
+import { ResultCollector } from ".";
 import { AsyncResult } from "./AsyncResult";
 import { List, list } from "./List";
 import { Option, none, option } from "./Option";
-import { pipe, Pipe } from "./pipe";
 import { seq, Seq } from "./Seq";
 
 /**
@@ -1015,6 +1015,54 @@ export class Result<A, B> {
 
     return run(state);
   };
+
+  static hoard<A, B, Err, Return = Result<[A, B], List<Err>>>(rs: ResultCollector<[A, B], Err>): Return;
+  static hoard<A, B, C, Err, Return = Result<[A, B, C], List<Err>>>(rs: ResultCollector<[A, B, C], Err>): Return;
+  static hoard<A, B, C, D, Err, Return = Result<[A, B, C, D], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D], Err>
+  ): Return;
+  static hoard<A, B, C, D, E, Err, Return = Result<[A, B, C, D, E], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D, E], Err>
+  ): Return;
+  static hoard<A, B, C, D, E, F, Err, Return = Result<[A, B, C, D, E, F], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D, E, F], Err>
+  ): Return;
+  static hoard<A, B, C, D, E, F, G, Err, Return = Result<[A, B, C, D, E, F, G], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D, E, F, G], Err>
+  ): Return;
+  static hoard<A, B, C, D, E, F, G, H, Err, Return = Result<[A, B, C, D, E, F, G, H], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D, E, F, G, H], Err>
+  ): Return;
+  static hoard<A, B, C, D, E, F, G, H, I, Err, Return = Result<[A, B, C, D, E, F, G, H, I], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D, E, F, G, H, I], Err>
+  ): Return;
+  static hoard<A, B, C, D, E, F, G, H, I, J, Err, Return = Result<[A, B, C, D, E, F, G, H, I, J], List<Err>>>(
+    rs: ResultCollector<[A, B, C, D, E, F, G, H, I, J], Err>
+  ): Return;
+  static hoard<T, Err, Return = Result<T[], List<Err>>>(rs: Result<T, Err>[]): Return;
+  static hoard<T extends any[], Err, Return = Result<T, List<Err>>>(rs: Result<any, Err>[]): Return;
+  static hoard<T extends any[], Err, Return = Result<T, List<Err>>>(rs: Result<any, Err>[]): Return {
+    const [okVals, errVals] = List.ofArray(rs).partition(x => (x as any).isOk);
+
+    if (errVals.isEmpty) {
+      return ok(okVals.toArray().flatMap(x => (x as any).toArray() as any[])) as any;
+    }
+
+    return err(errVals.flatMap(x => (x as any).errToList())) as any;
+  }
+
+  static collect = <T extends Record<string, Result<any, Err>>, Err>(
+    results: T
+  ): Result<{ [k in keyof T]: T[k]["value"] }, List<Err>> => {
+    const entries = List.ofArray(Object.entries(results));
+    const [okEntries, errEntries] = entries.partition(([_, val]) => val.isOk);
+
+    if (errEntries.isEmpty) {
+      return ok(okEntries.fold((obj, [key, val]) => ({ ...obj, [key]: val.value }), {})) as any;
+    }
+
+    return err(errEntries.map(([_, val]) => val.raw));
+  };
 }
 
 /**
@@ -1042,89 +1090,3 @@ export const ok = Result.ok;
  * expect(x.err).toEqual("oops");
  */
 export const err = Result.err;
-
-class ResultComputation<A extends Object, B> {
-  constructor(private readonly ctx: Result<A, B>) {}
-
-  /**
-   * Assigns a value to a variable inside the computation's scope.
-   * @example
-   * const res =
-   *   Result.ce()
-   *     .let('x', ok(5))
-   *     .let('y', () => ok(10))
-   *     .return(({ x, y }) => x + y);
-   *
-   * expect(res.value).toEqual(15);
-   */
-  public let<K extends string, T>(
-    k: K,
-    other: ((ctx: A) => Result<T, B>) | Result<T, B>
-  ): ResultComputation<A & { [k in K]: T }, B> {
-    const value = Result.bind((ctx: A) => {
-      if (typeof other === "function") {
-        const r = (other as Function)(ctx);
-
-        if (r instanceof Result) {
-          return r;
-        }
-
-        return ok(r);
-      }
-
-      if (other instanceof Result) {
-        return other;
-      }
-
-      return ok(other);
-    })(this.ctx);
-    const ctx = Result.map2((ctx: A, val: T) => ({ ...ctx, [k.toString()]: val }))(this.ctx)(value);
-
-    return new ResultComputation(ctx as any);
-  }
-
-  /**
-   * Executes and awaits a side-effectful operation.
-   * @example
-   * const res =
-   *   Result.ce()
-   *     .let('x', ok(5))
-   *     .do(({ x }) => console.log(x))
-   *     .return(({ x }) => x);
-   *
-   * expect(res.value).toEqual(5);
-   */
-  public do(fn: (ctx: A) => void): ResultComputation<A, B> {
-    this.ctx.iter(fn);
-
-    return new ResultComputation(this.ctx as any);
-  }
-
-  /**
-   * Returns a value from the computation expression.
-   * @example
-   * const res =
-   *   Result.ce()
-   *     .let('x', ok(5))
-   *     .let('y', () => ok(10))
-   *     .return(({ x, y }) => x + y);
-   *
-   * expect(res.value).toEqual(15);
-   */
-  public return<T>(fn: (ctx: A) => T): Result<T, B> {
-    return Result.map(fn)(this.ctx) as Result<T, B>;
-  }
-
-  /**
-   * Ignores the value from the computation expression.
-   * @example
-   * const res: Result<void> =
-   *   Result.ce()
-   *     .let('a' => ok(3))
-   *     .do(({ a }) => console.log(a))
-   *     .ignore();
-   */
-  public ignore(): Result<void, B> {
-    return Result.map(() => {})(this.ctx) as Result<void, B>;
-  }
-}

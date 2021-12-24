@@ -1,3 +1,5 @@
+import { Result } from "./Result";
+
 export type Head<T extends any[]> = T extends [any, ...any[]] ? T[0] : never;
 export type Snd<T extends any[]> = T extends [any, any, ...any[]] ? T[1] : never;
 
@@ -45,13 +47,14 @@ type CFn<P extends any[], R> = (
   : (arg_7: Index<7, P>) => Length<Skip<8, P>> extends 0 ? R
   : CFn<Skip<8, P>, R>
 
-type JsonValue = string | number | boolean | null | undefined | JsonValue[] | { [key: string]: JsonValue };
-type Json = Record<string, JsonValue>;
+export type Concat<T extends any[], U extends any[]> = [...T, ...U];
+export type ResultCollector<T extends any[], Err, Acc extends any[] = []> = HasTail<T> extends false
+  ? Concat<Acc, [Result<Head<T>, Err>]>
+  : ResultCollector<Tail<T>, Err, Concat<Acc, [Result<Head<T>, Err>]>>;
 
-type Nominal<TName extends string, T> = Readonly<{
-  type: TName;
-  value: T;
-}>;
+export type ArrayKeyVals<Arr extends T[], Key extends keyof T, T, Acc extends any[] = []> = HasTail<Arr> extends false
+  ? Concat<Acc, [Head<Arr>[Key]]>
+  : ArrayKeyVals<Tail<Arr>, Key, T, Concat<Acc, [Head<Arr>[Key]]>>;
 
 export type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
@@ -67,9 +70,7 @@ export type ConcatX<T extends readonly (readonly any[])[]> = [
 ];
 
 // Taken from: https://stackoverflow.com/a/59833759
-export type Flatten<T extends readonly any[]> = ConcatX<
-  [...{ [K in keyof T]: T[K] extends any[] ? T[K] : [T[K]] }, ...[][]]
->;
+type Flatten<T extends readonly any[]> = ConcatX<[...{ [K in keyof T]: T[K] extends any[] ? T[K] : [T[K]] }, ...[][]]>;
 
 export type NonVoid<T> = T extends void ? never : T;
 

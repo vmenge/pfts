@@ -1,5 +1,5 @@
 import { List } from "./List";
-import { none, option, Option, some } from "./Option";
+import { none, option, Option } from "./Option";
 
 /**
  * An immutable key value pair collection.
