@@ -34,4 +34,7 @@ export class Num {
 
       return some(res);
     };
+
+  static isEven = (n: number): boolean => n % 2 === 0;
+  static isOdd = (n: number): boolean => n % 2 > 0;
 }

@@ -1051,9 +1051,9 @@ export class Result<A, B> {
     return err(errVals.flatMap(x => (x as any).errToList())) as any;
   }
 
-  static collect = <T extends Record<string, Result<any, Err>>, Err>(
+  static collect = <T extends Record<string, Result<any, Err>>, Err, K extends keyof T>(
     results: T
-  ): Result<{ [k in keyof T]: T[k]["value"] }, List<Err>> => {
+  ): Result<{ [k in K]: T[k]["value"] }, List<T[K]["err"]>> => {
     const entries = List.ofArray(Object.entries(results));
     const [okEntries, errEntries] = entries.partition(([_, val]) => val.isOk);
 

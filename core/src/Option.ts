@@ -8,6 +8,7 @@ import { Seq, seq } from "./Seq";
  * A class that can represent the presence (`Some<A>`) or abscence (`None`) of a value.
  */
 export class Option<A> {
+  private static _none = new Option<never>();
   private constructor(private readonly _value?: A) {}
 
   /**
@@ -44,7 +45,7 @@ export class Option<A> {
    * const x = Option.none();
    * expect(x.isNone).toEqual(true);
    */
-  static none = <T = never>(): Option<NonNullable<T>> => new Option<NonNullable<T>>();
+  static none = <T = never>(): Option<NonNullable<T>> => Option._none as Option<NonNullable<T>>;
 
   /**
    * @returns the value contained inside the `Option<A>`.
@@ -1184,73 +1185,3 @@ export const none = Option.none;
  * expect(y.isNone).toEqual(true);
  */
 export const option = Option.new;
-
-class OptionComputation<A extends Object> {
-  constructor(private readonly ctx: Option<A>) {}
-
-  /**
-   * Assigns a value to a variable inside the computation's scope.
-   * @example
-   * const res =
-   *   Option.ce()
-   *     .let('x', some(5))
-   *     .let('y', () => some(10))
-   *     .return(({ x, y }) => x + y);
-   *
-   * expect(res.value).toEqual(15);
-   */
-  public let<K extends string, T>(
-    k: K,
-    other: Option<T> | ((ctx: A) => Option<T>)
-  ): OptionComputation<A & { [k in K]: T }> {
-    const value = Option.bind((ctx: A) => (typeof other === "object" ? other : other(ctx)))(this.ctx);
-    const ctx = Option.map2((ctx: A, val: T) => ({ ...ctx, [k.toString()]: val }))(this.ctx)(value);
-
-    return new OptionComputation(ctx as any);
-  }
-
-  /**
-   * Executes and awaits a side-effectful operation.
-   * @example
-   * const res =
-   *   Option.ce()
-   *     .let('x', some(5))
-   *     .do(({ x }) => console.log(x))
-   *     .return(({ x }) => x);
-   *
-   * expect(res.value).toEqual(5);
-   */
-  public do(fn: (ctx: A) => void): OptionComputation<A> {
-    this.ctx.iter(fn);
-
-    return new OptionComputation(this.ctx as any);
-  }
-
-  /**
-   * Returns a value from the computation expression.
-   * @example
-   * const res =
-   *   Option.ce()
-   *     .let('x', some(5))
-   *     .let('y', () => some(10))
-   *     .return(({ x, y }) => x + y);
-   *
-   * expect(res.value).toEqual(15);
-   */
-  public return<T>(fn: (ctx: A) => T): Option<T> {
-    return Option.map(fn)(this.ctx);
-  }
-
-  /**
-   * Ignores the value from the computation expression.
-   * @example
-   * const res: Option<void> =
-   *   Option.ce()
-   *     .let('a' => some(3))
-   *     .do(({ a }) => console.log(a))
-   *     .ignore();
-   */
-  public ignore(): Option<void> {
-    return Option.map(() => {})(this.ctx);
-  }
-}
