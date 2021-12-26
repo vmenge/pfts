@@ -19,13 +19,13 @@ Install `pfts` with
 ##### npm
 
 ```bash
-npm install purify-ts
+npm install @pfts/core
 ```
 
 ##### yarn
 
 ```bash
-yarn add purify-ts
+yarn add @pfts/core
 ```
 
 ## Docs
