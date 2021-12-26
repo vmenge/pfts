@@ -129,6 +129,14 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
     return this.bind(a => c.map(c => fn(a, c)));
   }
 
+  match<C>(someFn: (a: A) => C, errFn: (b: B) => C): Async<C> {
+    return this.raw.map(x => x.match(someFn, errFn));
+  }
+
+  matchAsync<C>(someFn: (a: A) => Async<C>, errFn: (b: B) => Async<C>): Async<C> {
+    return this.raw.bind(x => x.match(someFn, errFn));
+  }
+
   iter(fn: (a: A) => void): Async<void> {
     return async(this.raw.promise.then(x => x.iter(fn)));
   }

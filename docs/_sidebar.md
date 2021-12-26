@@ -1,4 +1,4 @@
-- [Home](/)
-- Learn
-- Examples
 - Docs
+- Learn
+  - [Option](/learn/option.md)
+- Examples

@@ -222,6 +222,14 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
     return this.bind(a => b.map(b => fn(a, b)));
   }
 
+  match<B>(someFn: (a: A) => B, noneFn: () => B): Async<B> {
+    return this.raw.map(x => x.match(someFn, noneFn));
+  }
+
+  matchAsync<B>(someFn: (a: A) => Async<B>, noneFn: () => Async<B>): Async<B> {
+    return this.raw.bind(x => x.match(someFn, noneFn));
+  }
+
   /**
    * `this: AsyncOption<A>`
    *
