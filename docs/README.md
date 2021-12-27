@@ -8,7 +8,7 @@
 through abstractions (`Option`, `Result`, `AsyncOption`, `AsyncResult`, etc...) that helps keep your functions honest/predictable and make illegal states unrepresentable.
 
 There also a couple of immutable collection types (`Dict` and `List`) with a much greater number of functions than the default
-JavaScript `Map` and `Array` types to facilitate development. `pfts` collection uses their own method names to help distinguish them from the JavaScript types (.e.g, `list.forall()` instead of `array.every()`.
+JavaScript `Map` and `Array` types to facilitate development. `pfts` collection uses their own method names to help distinguish them from the JavaScript types (.e.g, `list.forall()` instead of `array.every()`).
 
 `pfts` tries to keep things idiomatic to TypeScript, with the fact that JavaScript relies heavily on objects and the dot notation kept in mind when developing the library.
 

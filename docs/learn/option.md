@@ -18,16 +18,13 @@ There are three constructors used to create an `Option` in `pfts`.
 We can use the getters `.isSome` or `.isNone` to check if an `Option` is `Some` or `None`.
 
 ```ts
-import { ok, some, none } from "@pfts/core";
-// some()
+import { option, some, none } from "@pfts/core";
 const num = some(5);
 num.isSome; // returns true
 
-// none()
 const nothing = none();
 num.isSome; // returns false
 
-// option()
 const value = option("val");
 value.isSome; // returns true
 
@@ -38,14 +35,14 @@ const nVal = option(null);
 nVal.isNone; // returns true
 ```
 
-When writing a function that returns an `Option`, try to always include the return type in the signature to help TypeScript
-infer the correct types.
+> When writing a function that returns an `Option` try to always include the return type in the signature to help TypeScript
+> infer the correct types.
 
 ```ts
 // string -> Option<string>
-const parseNum = (s: string): Option<string> => {
+const parseNum = (s: string): Option<number> => {
   const num = Number(s);
-  return Number.isNaN(s) ? none() : some(s);
+  return Number.isNaN(s) ? none() : some(num);
 };
 
 const num = parseNum("10");
@@ -55,7 +52,7 @@ const num = parseNum("a");
 num.isSome; // false
 ```
 
-We could've just used regular JavaScript and returned `string` | `undefined` in this simple example. The real benefit of
+We could've just used regular TypeScript and returned `string | undefined` in this simple example. The real benefit of
 the `Option` starts to become more apparent when using its methods.
 
 ## **map**
@@ -110,7 +107,7 @@ type User = { id: number; name: string };
 declare function findUser(n: number): Option<User>;
 
 const user = parseNum("5").map(num => findUser(num));
-// User is now Option<Option<string>>
+// user is now Option<Option<string>>
 ```
 
 When returning an `Option` in the function passed to `.map()` we end up with a nested `Option`. We could call `Option.flatten` to flatten down
@@ -125,7 +122,7 @@ But wouldn't it be better if we had a function that worked just like `.map()`, b
 
 ```ts
 const user = parseNum("5").bind(num => findUser(num));
-// User is now Option<string>
+// user is now Option<string>
 ```
 
 With `.bind()` we can easily chain a lot of optional method calls and create code that is easy to read and write.
@@ -188,7 +185,7 @@ const y = none().match(
 
 `this: Option<A>`
 
-`defaultValue: A -> Option<A> -> A`
+`defaultValue: A -> A`
 
 ---
 
@@ -206,7 +203,7 @@ const b = some(9).defaultValue(5);
 
 `this: Option<A>`
 
-`defaultValue: (() -> A) -> Option<A> -> A`
+`defaultValue: (() -> A) -> A`
 
 ---
 
@@ -227,11 +224,11 @@ If you are sure that the value is `Some` even though the compiler doesn't know, 
 `.value` getter, which throws an `Error` if the value is `None`.
 
 ```ts
-const a = ok(5).raw;
+const a = some(5).raw;
 // typeof a is number | undefined
 // a is 5
 
-const b = ok("hello").value;
+const b = some("hello").value;
 // typeof b is string
 // b is "hello"
 
@@ -243,7 +240,7 @@ Avoid relying on `.isSome` together with `.value`, since most of the time it wou
 `Option` to begin with.
 
 ```ts
-const a = ok(5);
+const a = some(5);
 
 // avoid this!
 if (a.isSome) {
@@ -266,8 +263,8 @@ Sometimes you have to deal with multiple Options, or you require multiple option
 `.zip()` evaluates two Options. If they both are `Some` it returns those values tupled, otherwise `.zip()` returns `None`.
 
 ```ts
-const a = ok(1);
-const b = ok("one");
+const a = some(1);
+const b = some("one");
 const c = none();
 
 const someTuple = a.zip(b);
@@ -360,3 +357,7 @@ const createProfile = (rawHandle: string, rawEamil: string, rawUri: string) =>
     return { userHandle, email, uri };
   });
 ```
+
+## More
+
+Take a look at the [Option docs](/docs/option.md) to find out all the other methods available to it, and keep on reading the guide section, moving on to the [Result](/learn/result.md?id=resultlta-bgt) next.

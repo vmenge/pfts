@@ -175,6 +175,54 @@ describe("Result", () => {
     });
   });
 
+  describe(".zip", () => {
+    it("zips together two Oks", () => {
+      const a = ok(1);
+      const b = ok(true);
+
+      const ab = a.zip(b);
+      expect(ab.raw).toEqual([1, true]);
+    });
+
+    it("returns the instance Err, and then the arg Err", () => {
+      const a = err("oops");
+      const b = err("oh no!");
+
+      const ab = a.zip(b);
+      const ba = b.zip(a);
+
+      expect(ab.err).toEqual("oops");
+      expect(ba.err).toEqual("oh no!");
+    });
+  });
+
+  describe(".zip3", () => {
+    it("zips together three Oks", () => {
+      const a = ok(1);
+      const b = ok(true);
+      const c = ok("hey");
+
+      const abc = a.zip3(b, c);
+      expect(abc.raw).toEqual([1, true, "hey"]);
+    });
+
+    it("returns the instance Err, then the arg1 Err, and finally the arg2 Err", () => {
+      const a = err("oops");
+      const b = err("oh no!");
+      const c = err("aaa");
+      const d = ok<number, string>(5);
+      const e = ok<boolean, string>(true);
+
+      const abc = a.zip3(b, c);
+      const dba = d.zip3(b, a);
+      const edc = e.zip3(d, c);
+
+      expect(abc.err).toEqual("oops");
+      expect(dba.err).toEqual("oh no!");
+      expect(edc.err).toEqual("aaa");
+    });
+  });
+
   describe(".trace()", () => {
     it("Logs the value inside the Result", () => {
       const spy = jest.spyOn(console, "log");

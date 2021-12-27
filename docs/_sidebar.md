@@ -1,4 +1,13 @@
-- Docs
+- ~~Docs~~
 - Learn
-  - [Option](/learn/option.md)
-- Examples
+  - [Option](/learn/option.md?id=optionltagt)
+  - [Result](/learn/result.md?id=resultlta-bgt)
+  - ~~Async~~
+  - ~~AsyncOption~~
+  - ~~AsyncResult~~
+  - ~~Validator~~
+  - ~~NewType~~
+  - ~~List~~
+  - ~~Dict~~
+  - ~~Currying, Piping and Composing~~
+- ~~Examples~~

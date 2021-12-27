@@ -977,6 +977,18 @@ export class Result<A, B> {
       r1.zip3(r2, r3);
 
   /**
+   * `flatten: Result<Result<A, B>, B> -> Result<A, B>`
+   *
+   * ---
+   * Flattens a nested `Result<A, B>`.
+   * @example
+   * const a = ok(ok(3));
+   * const b = Result.flatten(a);
+   * expect(b.value).toEqual(3);
+   */
+  static flatten = <A, B>(r: Result<Result<A, B>, B>): Result<A, B> => r.bind(x => x);
+
+  /**
    * `sequenceArray: Result<A, B>[] -> Result<A[], B>`
    *
    * ---
