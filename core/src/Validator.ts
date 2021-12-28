@@ -56,9 +56,7 @@ export class Validator<A> {
     return new Validator(
       n =>
         isArray(n).bind(arr => {
-          const res = arr.map((el, i) => {
-            return v.fn(el).mapErr(err => `[${i}]: ${err.join(", ")}`);
-          });
+          const res = arr.map((el, i) => v.fn(el).mapErr(err => `[${i}]: ${err.join(", ")}`));
 
           return Result.hoard(res).mapErr(x => x.toArray());
         }),
@@ -132,7 +130,7 @@ export class Validator<A> {
     return new Validator(this.fn, { ...this.opt, canBeUndefined: true }) as any;
   }
 
-  validate(n: unknown): Result<A, string[]> {
+  validate = (n: unknown): Result<A, string[]> => {
     // Extremely unsafe casting below, made safe only by the fact that there is only ONE WAY to mark
     // the Validator as optional / nullable / undefineaable.
     if ((this.opt.canBeNull || this.opt.canBeUndefined || this.opt.optional) && (n === null || n === undefined)) {
@@ -154,9 +152,9 @@ export class Validator<A> {
     }
 
     return result;
-  }
+  };
 
-  validateResponse = (res: Response, type: "text" | "json"): AsyncResult<A, string[]> => {
+  validateResponse = (res: Response, type: "text" | "json" = "json"): AsyncResult<A, string[]> => {
     const fn = type === "text" ? res.text : res.json;
 
     return AsyncResult.run(() =>

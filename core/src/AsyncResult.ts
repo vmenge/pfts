@@ -237,13 +237,13 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   static value = <A, B>(ar: AsyncResult<A, B> | Async<Result<A, B>>): Async<A> => normalize(ar).value;
 
   static map =
-    <A, B, C>(fn: (a: A) => C) =>
-    (ar: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): AsyncResult<C, B> =>
+    <A, C>(fn: (a: A) => C) =>
+    <B>(ar: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): AsyncResult<C, B> =>
       normalize(ar).map(fn);
 
   static map2 =
-    <A, B, C, D>(fn: (a: A, c: C) => D) =>
-    (ar1: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>) =>
+    <A, C, D>(fn: (a: A, c: C) => D) =>
+    <B>(ar1: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>) =>
     (ar2: AsyncResult<C, B> | Async<Result<C, B>> | Promise<Result<C, B>>): AsyncResult<D, B> =>
       normalize(ar1).map2(normalize(ar2), fn);
 
@@ -253,16 +253,16 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
       normalize(ar).bind(fn);
 
   static iter =
-    <A, B>(fn: (a: A) => void) =>
-    (x: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): Async<void> =>
+    <A>(fn: (a: A) => void) =>
+    <B>(x: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): Async<void> =>
       normalize(x).iter(fn);
 
   static toAsyncOption = <A, B>(ar: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): AsyncOption<A> =>
     new AsyncOption(normalize(ar).raw.map(x => x.toOption()));
 
   static ofAsyncOption =
-    <A, B>(err: B) =>
-    (ao: AsyncOption<A>): AsyncResult<A, B> =>
+    <B>(err: B) =>
+    <A>(ao: AsyncOption<A>): AsyncResult<A, B> =>
       new AsyncResult(ao.toAsync().map(Result.ofOption(err)));
 
   static sequenceArray<A, B>(ars: AsyncResult<A, B>[]): AsyncResult<A[], B>;

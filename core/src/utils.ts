@@ -23,3 +23,4 @@ export const mult = (x: number) => (y: number) => x * y;
 export const div = (x: number) => (y: number) => x / y;
 export const mod = (x: number) => (y: number) => x % y;
 export const unit = (() => {})();
+export const id = <T>(t: T): T => t;

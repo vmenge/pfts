@@ -1,4 +1,4 @@
-import { err, List, list, ok, Result } from "@pfts/core/src";
+import { err, Option, list, ok, Result, id, AsyncResult, Fn, some, none, List, seq, Seq } from "@pfts/core/src";
 
 describe("Result", () => {
   describe("Result.ok()", () => {
@@ -86,7 +86,7 @@ describe("Result", () => {
     });
   });
 
-  describe(".map()", () => {
+  describe(".bind()", () => {
     it("Executes a Result returning function against the value of the Result when it is Ok, returning a flattened Result", () => {
       const res = ok(1).bind(x => ok(x * 2));
       expect(res.raw).toEqual(2);
@@ -232,6 +232,317 @@ describe("Result", () => {
 
       err("hello").trace("msg:");
       expect(spy).toHaveBeenLastCalledWith("msg: hello");
+    });
+  });
+
+  describe(".map2()", () => {
+    it("maps over 2 Oks", () => {
+      const res = ok(1).map2(ok(2), (x, y) => x + y);
+
+      expect(res.raw).toEqual(3);
+    });
+
+    it("returns Errs in the correct order", () => {
+      const err1 = err("1");
+      const err2 = err("2");
+      const res1 = err1.map2(err2, () => {});
+      const res2 = err2.map2(err1, () => {});
+
+      expect(res1.raw).toEqual("1");
+      expect(res2.raw).toEqual("2");
+    });
+  });
+
+  describe(".map3()", () => {
+    it("maps over 3 Oks", () => {
+      const res = ok(1).map3(ok(2), ok(3), (x, y, z) => x + y + z);
+
+      expect(res.raw).toEqual(6);
+    });
+
+    it("returns Errs in the correct order", () => {
+      const ok1 = ok<number, string>(1);
+      const ok2 = ok<number, string>(2);
+      const err1 = err("1");
+      const err2 = err("2");
+      const err3 = err("3");
+      const res1 = err1.map3(ok1, err2, () => {});
+      const res2 = err2.map3(err1, ok1, () => {});
+      const res3 = err3.map3(err2, err1, () => {});
+      const res4 = ok1.map3(err3, err2, () => {});
+      const res5 = ok1.map3(ok2, err2, () => {});
+
+      expect(res1.raw).toEqual("1");
+      expect(res2.raw).toEqual("2");
+      expect(res3.raw).toEqual("3");
+      expect(res4.raw).toEqual("3");
+      expect(res5.raw).toEqual("2");
+    });
+  });
+
+  describe(".toOption()", () => {
+    it("returns the Result<A, B> as Option<A>", () => {
+      const okOpt = ok(1).toOption();
+      expect(okOpt).toBeInstanceOf(Option);
+      expect(okOpt.raw).toEqual(1);
+
+      const errOpt = err("oops").toOption();
+      expect(errOpt).toBeInstanceOf(Option);
+      expect(errOpt.raw).toBeUndefined();
+    });
+  });
+
+  describe(".errToOption()", () => {
+    it("returns the Result<A, B> as Option<B>", () => {
+      const okOpt = ok(1).errToOption();
+      expect(okOpt).toBeInstanceOf(Option);
+      expect(okOpt.raw).toBeUndefined();
+
+      const errOpt = err("oops").errToOption();
+      expect(errOpt).toBeInstanceOf(Option);
+      expect(errOpt.raw).toEqual("oops");
+    });
+  });
+
+  describe(".toSeq()", () => {
+    it("returns the Result<A< B> as Seq<A>", () => {
+      const seq = ok("one").toSeq();
+      expect(seq.length()).toEqual(1);
+      expect(seq.head().raw).toEqual("one");
+
+      const empty = err<number, string>("oops").toSeq();
+      expect(empty.isEmpty()).toEqual(true);
+    });
+  });
+
+  describe(".toList()", () => {
+    it("returns the Result<A< B> as List<A>", () => {
+      const lst = ok("one").toList();
+      expect(lst.length).toEqual(1);
+      expect(lst.head().raw).toEqual("one");
+
+      const empty = err<number, string>("oops").toList();
+      expect(empty.isEmpty).toEqual(true);
+    });
+  });
+
+  describe(".toArray()", () => {
+    it("returns the Result<A< B> as Array<A>", () => {
+      const arr = ok("one").toArray();
+      expect(arr.length).toEqual(1);
+      expect(arr[0]).toEqual("one");
+
+      const empty = err<number, string>("oops").toArray();
+      expect(empty.length).toEqual(0);
+    });
+  });
+
+  describe(".errToList()", () => {
+    it("returns the Result<A< B> as List<A>", () => {
+      const lst = err("one").errToList();
+      expect(lst.length).toEqual(1);
+      expect(lst.head().raw).toEqual("one");
+
+      const empty = ok<number, string>(1).errToList();
+      expect(empty.isEmpty).toEqual(true);
+    });
+  });
+
+  describe(".errToArray()", () => {
+    it("returns the Result<A< B> as Array<A>", () => {
+      const arr = err("one").errToArray();
+      expect(arr.length).toEqual(1);
+      expect(arr[0]).toEqual("one");
+
+      const empty = ok<number, string>(1).errToArray();
+      expect(empty.length).toEqual(0);
+    });
+  });
+
+  describe(".defaultValue()", () => {
+    it("returns the Ok value or the default value", () => {
+      const a = ok(1).defaultValue(2);
+      expect(a).toEqual(1);
+
+      const b = err<number, string>("oops").defaultValue(3);
+      expect(b).toEqual(3);
+    });
+  });
+
+  describe(".defaultWith()", () => {
+    it("returns the Ok value or the value from the defaultWith fn", () => {
+      const a = ok(1).defaultWith(() => 2);
+      expect(a).toEqual(1);
+
+      const b = err<number, string>("oops").defaultWith(() => 3);
+      expect(b).toEqual(3);
+    });
+  });
+
+  describe(".orElse()", () => {
+    it("returns the Result instance if it is Ok or else the value from the args", () => {
+      const k1 = ok(1);
+      const k2 = ok(2);
+      const e1 = err<number, string>("1");
+      const e2 = err<number, string>("2");
+
+      const a = k1.orElse(k2);
+      const b = k2.orElse(k1);
+      const c = e1.orElse(k1);
+      const d = e2.orElse(e1);
+
+      expect(a.raw).toEqual(1);
+      expect(b.raw).toEqual(2);
+      expect(c.raw).toEqual(1);
+      expect(d.raw).toEqual("1");
+    });
+  });
+
+  describe(".orElseWith()", () => {
+    it("returns the Result instance if it is Ok or else the return value from the fn from the args", () => {
+      const k1 = ok(1);
+      const k2 = ok(2);
+      const e1 = err<number, string>("1");
+      const e2 = err<number, string>("2");
+
+      const a = k1.orElseWith(() => k2);
+      const b = k2.orElseWith(() => k1);
+      const c = e1.orElseWith(() => k1);
+      const d = e2.orElseWith(() => e1);
+
+      expect(a.raw).toEqual(1);
+      expect(b.raw).toEqual(2);
+      expect(c.raw).toEqual(1);
+      expect(d.raw).toEqual("1");
+    });
+  });
+
+  describe(".match()", () => {
+    const okFn = (n: number) => n.toString();
+
+    it("returns the value from okFn if is Ok", () => {
+      const res = ok(1).match(okFn, id);
+      expect(res).toEqual("1");
+    });
+
+    it("returns the value from errFn if is Err", () => {
+      const res = err("oh no").match(okFn, id);
+      expect(res).toEqual("oh no");
+    });
+  });
+
+  describe(".to()", () => {
+    it("pipes the Result instance to a function", () => {
+      const res = ok(1).to(x => x.raw);
+      expect(res).toEqual(1);
+    });
+  });
+
+  describe(".toAsyncResult()", () => {
+    it("returns the Result<A, B> as AsyncResult<A, B>", done => {
+      const res = ok(1).toAsyncResult();
+
+      expect(res).toBeInstanceOf(AsyncResult);
+
+      res.value.then(x => {
+        expect(x).toEqual(1);
+        done();
+      });
+    });
+  });
+
+  describe(".toString()", () => {
+    it("returns the A or B inside the Result as a string", () => {
+      const k = ok(1).toString();
+      const e = err(true).toString();
+
+      expect(k).toEqual("1");
+      expect(e).toEqual("true");
+    });
+  });
+
+  describe(".apply()", () => {
+    it("Applies the fn if both are Ok", () => {
+      const fn = ok((x: number) => x * 2);
+      const res = ok(5).apply(fn);
+
+      expect(res.raw).toEqual(10);
+    });
+
+    it("Doesn't apply the fn if both are not Ok", () => {
+      const fn = ok<Fn<[number], number>, string>((x: number) => x * 2);
+      const e1 = err("oops");
+      const e2 = err<Fn<[number], number>, string>("oh no");
+
+      const res1 = e1.apply(fn);
+      const res2 = ok<number, string>(1).apply(e2);
+
+      expect(res1.raw).toEqual("oops");
+      expect(res2.raw).toEqual("oh no");
+    });
+  });
+
+  describe("Result.ofOption()", () => {
+    it("Creates a Result from an Option", () => {
+      const k = Result.ofOption("oops")(some(1));
+      const e = Result.ofOption("oops")(none<number>());
+
+      expect(k.raw).toEqual(1);
+      expect(e.raw).toEqual("oops");
+    });
+  });
+
+  describe("Result.sequenceArray()", () => {
+    it("Sequences an Array of Ok Results", () => {
+      const arr = [ok(1), ok(2), ok(3)];
+      const k = Result.sequenceArray(arr);
+
+      expect(k).toBeInstanceOf(Result);
+      expect(k.raw).toEqual([1, 2, 3]);
+    });
+
+    it("Returns the first error in the Array", () => {
+      const arr = [ok(1), err("1"), err("2"), ok(2)];
+      const e = Result.sequenceArray(arr);
+
+      expect(e).toBeInstanceOf(Result);
+      expect(e.raw).toEqual("1");
+    });
+  });
+
+  describe("Result.sequenceList()", () => {
+    it("Sequences a List of Ok Results", () => {
+      const lst = list(ok(1), ok(2), ok(3));
+      const k = Result.sequenceList(lst);
+
+      expect(k).toBeInstanceOf(Result);
+      expect((k.raw as List<number>).toArray()).toEqual([1, 2, 3]);
+    });
+
+    it("Returns the first error in the List", () => {
+      const lst = list(ok(1), err("1"), err("2"), ok(2));
+      const e = Result.sequenceList(lst);
+
+      expect(e).toBeInstanceOf(Result);
+      expect(e.raw).toEqual("1");
+    });
+  });
+
+  describe("Result.sequenceSeq()", () => {
+    it("Sequences a Seq of Ok Results", () => {
+      const sq = seq(ok(1), ok(2), ok(3));
+      const k = Result.sequenceSeq(sq);
+
+      expect(k).toBeInstanceOf(Result);
+      expect((k.raw as Seq<number>).toArray()).toEqual([1, 2, 3]);
+    });
+
+    it("Returns the first error in the Seq", () => {
+      const sq = seq(ok(1), err("1"), err("2"), ok(2));
+      const e = Result.sequenceSeq(sq);
+
+      expect(e).toBeInstanceOf(Result);
+      expect(e.raw).toEqual("1");
     });
   });
 

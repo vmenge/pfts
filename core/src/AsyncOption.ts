@@ -459,8 +459,8 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
       normalize(x).iter(fn);
 
   static toAsyncResult =
-    <A, B>(err: B) =>
-    (ao: AsyncOption<A>): AsyncResult<A, B> =>
+    <B>(err: B) =>
+    <A>(ao: AsyncOption<A>): AsyncResult<A, B> =>
       ao.toAsyncResult(err);
 
   static ofAsyncResult = <A, B>(ar: AsyncResult<A, B>): AsyncOption<A> => {

@@ -741,7 +741,7 @@ export class List<A> {
    * `distinctBy: (A -> B) -> List<A>`
    *
    * ---
-   *  Returns a `List<A>` that contains no duplicate entries by using the `===` operator on the result of the given `projection` function on each element.
+   * Returns a `List<A>` that contains no duplicate entries by using the `===` operator on the result of the given `projection` function on each element.
    * @param projection function to be used to generate a comparison value for each element.
    * @example
    * const person = (name: string, age: number) => ({ name, age });
@@ -751,7 +751,7 @@ export class List<A> {
    *
    * const expected = list(person('joe', 30), person('miriam', 28));
    *
-   * expect(actual.eqBy(expected, JSON.stringify)).toEqual(true);
+   * expect(actual.toArray()).toEqual(expected.toArray());
    */
   distinctBy<B>(projection: (a: A) => B): List<A> {
     const map = new Map<B, A>();
@@ -777,7 +777,7 @@ export class List<A> {
    * @example
    * const actual = list(1, 2).append(list(3, 4));
    * const expected = list(1, 2, 3, 4);
-   * exepect(actual.eq(expected)).toEqual(true);
+   * expect(actual.eq(expected)).toEqual(true);
    */
   append(list: List<A>): List<A> {
     return List.new(...this._elements, ...list._elements);
@@ -940,7 +940,7 @@ export class List<A> {
    *   { name: 'jane', age: 28 }, { name: 'john', age: 30 }
    * );
    *
-   * expect(actual.eqBy(expected, JSON.stringify)).toEqual(true);
+   * expect(actual.toArray()).toEqual(expected.toArray());
    */
   sortBy<B>(projection: (a: A) => B): List<A> {
     return new List(
@@ -998,7 +998,7 @@ export class List<A> {
    * const actual = ppl.maxBy(p => p.age);
    * const expected = { name: 'john', age: 30 };
    *
-   * expect(actual).toEqual(expected)
+   * expect(actual.value).toEqual(expected)
    */
   maxBy<B>(projection: (a: A) => B): Option<A> {
     if (this._elements.length < 1) {
@@ -1033,7 +1033,7 @@ export class List<A> {
    * const actual = ppl.minBy(p => p.age);
    * const expected = { name: 'jane', age: 28 };
    *
-   * expect(actual).toEqual(expected)
+   * expect(actual.value).toEqual(expected)
    */
   minBy<B>(projection: (a: A) => B): Option<A> {
     if (this._elements.length < 1) {
@@ -1136,7 +1136,7 @@ export class List<A> {
    * ---
    * Returns a new list with the distinct elements of the input list which do not appear in the itemsToExclude list.
    * @example
-   * const actual = list(1, 2, 3, 4, 5).except(list(2, 5));
+   * const actual = list(1, 1, 2, 3, 4, 5).except(list(2, 5));
    * const expected = list(1, 3, 4);
    * expect(actual.eq(expected)).toEqual(true);
    */
@@ -1236,32 +1236,32 @@ export class List<A> {
     return new List([...this._elements].reverse());
   }
 
-  zip(list: List<A>): Option<List<[A, A]>> {
+  zip<B>(list: List<B>): Option<List<[A, B]>> {
     if (this.length !== list.length) {
       return none();
     }
 
-    let res: [A, A][] = [];
+    let res: [A, B][] = [];
 
     for (let i = 0; i < this.length; i++) {
       res.push([this._elements[i], list._elements[i]]);
     }
 
-    return some(new List(res));
+    return some(List.ofArray(res));
   }
 
-  zip3(list2: List<A>, list3: List<A>): Option<List<[A, A, A]>> {
+  zip3<B, C>(list2: List<B>, list3: List<C>): Option<List<[A, B, C]>> {
     if (this.length !== list2.length || list2.length !== list3.length) {
       return none();
     }
 
-    let res: [A, A, A][] = [];
+    let res: [A, B, C][] = [];
 
     for (let i = 0; i < this.length; i++) {
       res.push([this._elements[i], list2._elements[i], list3._elements[i]]);
     }
 
-    return some(new List(res));
+    return some(List.ofArray(res));
   }
 
   /**
@@ -1300,7 +1300,7 @@ export class List<A> {
    *   { name: "ann", age: 30 }, { name: "john", age: 31 }, { name: "ann", age: 42 }
    * );
    * const nameGroups = ppl.countBy(p => p.name);
-   * expect(pplCount.find("ann").value).toEqual(2);
+   * expect(nameGroups.find("ann").value).toEqual(2);
    */
   groupBy<B>(projection: (a: A) => B): Dict<B, List<A>> {
     const map: Map<B, List<A>> = new Map();
@@ -1358,7 +1358,7 @@ export class List<A> {
    * ---
    * Pipes this current `List` instance as an argument to the given function.
    * @example
-   * const a = list("one", "two").pipe(x => x.length);
+   * const a = list("one", "two").to(x => x.length);
    * expect(a).toEqual(2);
    */
   to<B>(fn: (a: List<A>) => B): B {
@@ -1390,6 +1390,16 @@ export class List<A> {
     return list();
   }
 
+  static map =
+    <A, B>(fn: (a: A) => B) =>
+    (lst: List<A>): List<B> =>
+      lst.map(fn);
+
+  static flatMap =
+    <A, B>(fn: (a: A) => List<B>) =>
+    (lst: List<A>): List<B> =>
+      lst.flatMap(fn);
+
   static rejectNones<B>(optList: List<Option<B>>): List<B> {
     return optList.choose(x => x);
   }
@@ -1399,7 +1409,7 @@ export class List<A> {
 
     for (const x of resultList) {
       if (x.isOk) {
-        res.push(x.value);
+        res.push(x.raw as B);
       }
     }
 
@@ -1444,8 +1454,8 @@ export class List<A> {
    * expect(actual.eq(expected)).toEqual(true);
    */
   static init =
-    <B>(count: number) =>
-    (initializer: (n: number) => B): List<B> => {
+    (count: number) =>
+    <B>(initializer: (n: number) => B): List<B> => {
       return List.range(0, count - 1).map(initializer);
     };
 
@@ -1459,9 +1469,9 @@ export class List<A> {
    * expect(actual.eq(expected)).toEqual(true);
    */
   static replicate =
-    <B>(count: number) =>
-    (value: B): List<B> => {
-      return List.init<B>(count)(() => value);
+    (count: number) =>
+    <B>(value: B): List<B> => {
+      return List.init(count)(() => value);
     };
 
   static unzip<A, B>(list: List<[A, B]>): [List<A>, List<B>] {

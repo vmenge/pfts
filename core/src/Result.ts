@@ -158,7 +158,31 @@ export class Result<A, B> {
       return fn(this._val as A);
     }
 
-    return this as any as Result<C, B>;
+    return this as any;
+  }
+
+  /**
+   * `this: Result<A, B>`
+   *
+   * `apply: Result<A -> C, B> -> Result<C, B>`
+   *
+   * ---
+   * Applies the function on this instance of Result if both are `Ok`.
+   * @example
+   * const fn = ok((x: number) => x * 2);
+   * const res = ok(5).apply(fn);
+   *
+   * expect(res.value).toEqual(10);
+   */
+  apply<C>(fn: Result<(a: A) => C, B>): Result<C, B> {
+    if (this.isOk) {
+      if (fn.isOk) {
+        return ok((fn.raw as (a: A) => C)(this.raw as A));
+      }
+
+      return fn as any;
+    }
+    return this as any;
   }
 
   /**
@@ -343,7 +367,7 @@ export class Result<A, B> {
     if (this.isOk) {
       if (r1.isOk) {
         if (r2.isOk) {
-          fn(this._val as A, r1._val as C, r2._val as D);
+          return ok(fn(this._val as A, r1._val as C, r2._val as D));
         }
 
         return r2 as any as Result<E, B>;
@@ -783,8 +807,8 @@ export class Result<A, B> {
    * expect(y.err).toEqual("oops");
    */
   static map =
-    <A, B, C>(fn: (t: A) => C) =>
-    (r: Result<A, B>): Result<C, B> =>
+    <A, C>(fn: (t: A) => C) =>
+    <B>(r: Result<A, B>): Result<C, B> =>
       r.map(fn);
 
   /**
@@ -816,7 +840,7 @@ export class Result<A, B> {
   static apply =
     <A, B, C>(fn: Result<(a: A) => B, C>) =>
     (r: Result<A, C>): Result<B, C> =>
-      Result.bind<(a: A) => B, C, B>(f => Result.bind<A, C, B>(x => ok(f(x)))(r))(fn);
+      r.apply(fn);
 
   /**
    * `mapErr: (B -> C) -> Result<A, B> -> Result<A, C>`
@@ -832,8 +856,8 @@ export class Result<A, B> {
    * expect(x.err).toEqual("err!!!");
    */
   static mapErr =
-    <A, B, C>(fn: (b: B) => C) =>
-    (r: Result<A, B>): Result<A, C> =>
+    <B, C>(fn: (b: B) => C) =>
+    <A>(r: Result<A, B>): Result<A, C> =>
       r.mapErr(fn);
 
   /**
@@ -854,8 +878,8 @@ export class Result<A, B> {
    * expect(y.err).toEqual("oops");
    */
   static map2 =
-    <A, B, C, D>(fn: (a: A, b: B) => C) =>
-    (r1: Result<A, D>) =>
+    <A, B, C>(fn: (a: A, b: B) => C) =>
+    <D>(r1: Result<A, D>) =>
     (r2: Result<B, D>): Result<C, D> =>
       r1.map2(r2, fn);
 
@@ -878,8 +902,8 @@ export class Result<A, B> {
    * expect(y.err).toEqual("oops");
    */
   static map3 =
-    <A, B, C, D, E>(fn: (a: A, b: B, c: C) => D) =>
-    (r1: Result<A, E>) =>
+    <A, B, C, D>(fn: (a: A, b: B, c: C) => D) =>
+    <E>(r1: Result<A, E>) =>
     (r2: Result<B, E>) =>
     (r3: Result<C, E>): Result<D, E> =>
       r1.map3(r2, r3, fn);
@@ -926,8 +950,8 @@ export class Result<A, B> {
    * expect(b.err).toEqual("oops");
    */
   static ofOption =
-    <A, B>(error: B) =>
-    (o: Option<A>): Result<A, B> =>
+    <B>(error: B) =>
+    <A>(o: Option<A>): Result<A, B> =>
       o.isSome ? ok(o.value) : err(error);
 
   /**
@@ -950,8 +974,8 @@ export class Result<A, B> {
    * expect(z.err).toEqual("fatal");
    */
   static zip =
-    <A, B, C>(r1: Result<A, C>) =>
-    (r2: Result<B, C>): Result<[A, B], C> =>
+    <A, C>(r1: Result<A, C>) =>
+    <B>(r2: Result<B, C>): Result<[A, B], C> =>
       r1.zip(r2);
 
   /**
@@ -971,9 +995,9 @@ export class Result<A, B> {
    * expect(y.err).toEqual("oh no");
    */
   static zip3 =
-    <A, B, C, D>(r1: Result<A, D>) =>
-    (r2: Result<B, D>) =>
-    (r3: Result<C, D>): Result<[A, B, C], D> =>
+    <A, D>(r1: Result<A, D>) =>
+    <B>(r2: Result<B, D>) =>
+    <C>(r3: Result<C, D>): Result<[A, B, C], D> =>
       r1.zip3(r2, r3);
 
   /**

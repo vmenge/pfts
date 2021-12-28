@@ -31,7 +31,7 @@ type ErrorBrand<Err extends string> = Readonly<{
 
 type RequireType<X> = X extends unknown ? ErrorBrand<"Type must be provided"> : X;
 
-type Fn<P extends any[], R> = (...args: P) => R;
+export type Fn<P extends any[], R> = (...args: P) => R;
 
 // prettier-ignore
 type CFn<P extends any[], R> = (

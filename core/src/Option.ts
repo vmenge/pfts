@@ -209,6 +209,27 @@ export class Option<A> {
   /**
    * `this: Option<A>`
    *
+   * `apply: Option<A -> B> -> Option<B>`
+   *
+   * ---
+   * Applies the function on this instance of Option if both are `Some`.
+   * @example
+   * const fn = some((x: number) => x * 2);
+   * const res = some(5).apply(fn);
+   *
+   * expect(res.value).toEqual(10);
+   */
+  apply<B>(fn: Option<(a: A) => B>): Option<B> {
+    if (this.isSome && fn.isSome) {
+      return option((fn.raw as (a: A) => B)(this.raw as A));
+    }
+
+    return this as any;
+  }
+
+  /**
+   * `this: Option<A>`
+   *
    * `contains: A -> boolean`
    *
    * ---
@@ -778,7 +799,7 @@ export class Option<A> {
   static apply =
     <A, B>(fn: Option<(a: A) => B>) =>
     (o: Option<A>): Option<B> =>
-      Option.bind<(a: A) => B, B>(f => Option.bind<A, B>(x => option(f(x)))(o))(fn);
+      o.apply(fn);
 
   /**
    * `contains: A -> Option<A> -> boolean`
@@ -980,8 +1001,8 @@ export class Option<A> {
    * expect(b.isNone).toEqual(true);
    */
   static zip =
-    <A, B>(o1: Option<A>) =>
-    (o2: Option<B>): Option<[A, B]> =>
+    <A>(o1: Option<A>) =>
+    <B>(o2: Option<B>): Option<[A, B]> =>
       o1.zip(o2);
 
   /**
@@ -998,9 +1019,9 @@ export class Option<A> {
    * expect(b.isNone).toEqual(true);
    */
   static zip3 =
-    <A, B, C>(o1: Option<A>) =>
-    (o2: Option<B>) =>
-    (o3: Option<C>): Option<[A, B, C]> =>
+    <A>(o1: Option<A>) =>
+    <B>(o2: Option<B>) =>
+    <C>(o3: Option<C>): Option<[A, B, C]> =>
       o1.zip3(o2, o3);
 
   /**
@@ -1049,8 +1070,8 @@ export class Option<A> {
    * expect(c).toEqual(false);
    */
   static any =
-    <A, B>(o1: Option<A>) =>
-    (o2: Option<B>): boolean =>
+    <A>(o1: Option<A>) =>
+    <B>(o2: Option<B>): boolean =>
       o1.isSome || o2.isSome;
 
   /**
@@ -1072,8 +1093,8 @@ export class Option<A> {
    * ---
    */
   static toResult =
-    <A, B>(error: B) =>
-    (o: Option<A>): Result<A, B> =>
+    <B>(error: B) =>
+    <A>(o: Option<A>): Result<A, B> =>
       o.toResult(error);
 
   /**
