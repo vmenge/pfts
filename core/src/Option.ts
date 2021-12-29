@@ -48,7 +48,7 @@ export class Option<A> {
   static none = <T = never>(): Option<NonNullable<T>> => Option._none as Option<NonNullable<T>>;
 
   /**
-   * @returns the value contained inside the `Option<A>`.
+   * @returns the `Some` value contained inside the `Option<A>`.
    * @throws an Error if the `Option<A>` is `None`.
    * @example
    * const x = some(5);
@@ -296,7 +296,7 @@ export class Option<A> {
    * ---
    * @param folder folder function
    * @param state initial `State`
-   * @returns the result of the `folder` function is the `Option` is `Some`, otherwise the initial `State`.
+   * @returns the result of the `folder` function if the `Option` is `Some`, otherwise the initial `State`.
    * @example
    * const opt1: Option<number> = none();
    * const res1 = opt1.fold((state, a) => state + a, 0);
@@ -634,6 +634,10 @@ export class Option<A> {
    * `toAsyncOption: () -> AsyncOption<A>`
    *
    * ---
+   * Converts the `Option` into a `AsyncOption`.
+   * @example
+   * const a = some(3).toAsyncOption();
+   * expect(a).toBeInstanceOf(AsyncOption);
    */
   toAsyncOption(): AsyncOption<A> {
     return new AsyncOption(async(this));
@@ -736,10 +740,10 @@ export class Option<A> {
    * @param fn mapping function.
    * @returns The resulting value of the mapping function wrapped in an `Option`.
    * @example
-   * const a = Option.map2(x + y => x + y)(some(5))(some(10));
+   * const a = Option.map2((x, y) => x + y)(some(5))(some(10));
    * expect(a.value).toEqual(15);
    *
-   * const b = Option.map2(x + y => x + y)(none())(some(9));
+   * const b = Option.map2((x, y) => x + y)(none())(some(9));
    * expect(() => b.value).toThrow();
    * expect(b.isNone).toEqual(true);
    */
@@ -757,10 +761,10 @@ export class Option<A> {
    * @param fn mapping function.
    * @returns The resulting value of the mapping function wrapped in an `Option`.
    * @example
-   * const a = Option.map3(x + y + z => x + y + z)(some(5))(some(10))(some(100));
+   * const a = Option.map3((x, y, z) => x + y + z)(some(5))(some(10))(some(100));
    * expect(a.value).toEqual(115);
    *
-   * const b = Option.map3(x + y + z => x + y + z)(none())(some(9))(some(1));
+   * const b = Option.map3((x, y, z) => x + y + z)(none())(some(9))(some(1));
    * expect(() => b.value).toThrow();
    * expect(b.isNone).toEqual(true);
    */
@@ -795,6 +799,12 @@ export class Option<A> {
    * `apply: Option<(A -> B)> -> Option<A> -> Option<B>`
    *
    * ---
+   * Applies the function to the value inside the `Option` if both are `Some`.
+   * @example
+   * const fn = some((x: number) => x * 2);
+   * const a = Option.apply(fn)(some(4));
+   *
+   * expect(a.value).toEqual(8);
    */
   static apply =
     <A, B>(fn: Option<(a: A) => B>) =>
@@ -886,8 +896,10 @@ export class Option<A> {
    * `iter: (A -> ()) -> Option<A> -> ()`
    *
    * ---
+   * Executes the given function against the value contained in the `Option<A>` if it is `Some`.
    * @example
-   * Option.iter(console.log)(some("hello, world!")); // prints "hello, world!"
+   * // prints "hello, world!"
+   * Option.iter(console.log)(some("hello, world!"));
    */
   static iter =
     <A>(fn: (a: A) => void) =>
@@ -910,6 +922,23 @@ export class Option<A> {
     <A>(value: A) =>
     (o: Option<A>): A =>
       o.defaultValue(value);
+
+  /**
+   * `defaultWith: (() -> A) -> Option<A> -> A`
+   *
+   * ---
+   * @returns the value contained in the `Option<A>` if it is Some, otherwise returns the default value from the evaluated function passed as an argument.
+   * @example
+   * const a = Option.defaultWith(() => 1)(none());
+   * expect(a.value).toEqual(1);
+   *
+   * const b = Option.defaultWith(() => 5)(some(9));
+   * expect(b.value).toEqual(9);
+   */
+  static defaultWith =
+    <A>(fn: () => A) =>
+    (o: Option<A>): A =>
+      o.defaultWith(fn);
 
   /**
    * `toArray: Option<A> -> A[]`
@@ -955,7 +984,7 @@ export class Option<A> {
    * ---
    * @param ifNone value to be returned if the main `Option<A>` is `None`.
    * @param opt main `Option`.
-   * @returns `Option<A>` if it is `Some`. Otherwise returns `ifNone`.
+   * @returns the `opt` `Option<A>` arg if it is `Some`. Otherwise returns `ifNone`.
    * @example
    * const a = Option.orElse(some(3))(some(10));
    * expect(a.value).toEqual(10);
@@ -1028,6 +1057,7 @@ export class Option<A> {
    * `ofTruthy: A -> Option<A>`
    *
    * ---
+   * Creates an `Option` that is `Some` if the given arg is truthy.
    * @example
    * const a = Option.ofTruthy("bla");
    * expect(a.isSome).toEqual(true);
@@ -1043,6 +1073,7 @@ export class Option<A> {
    * `ofFalsy: A -> Option<A>`
    *
    * ---
+   * Creates an `Option` that is `Some` if the given arg is falsy.
    * @example
    * const a = Option.ofFalsy(0);
    * expect(a.isSome).toEqual(true);
@@ -1081,6 +1112,7 @@ export class Option<A> {
    * @example
    * const a = Option.ofResult(ok(5));
    * expect(a.isSome).toEqual(true);
+   * expect(a.value).toEqual(5);
    *
    * const b = Option.ofResult(err("oops"));
    * expect(b.isNone).toEqual(true);
@@ -1091,6 +1123,14 @@ export class Option<A> {
    * `toResult: B -> Option<A> -> Result<A, B>`
    *
    * ---
+   * @example
+   * const a = Option.toResult("oops")(some(1));
+   * expect(a.isOk).toBe(true);
+   * expect(a.value).toEqual(1);
+   *
+   * const b = Option.toResult("oops")(none());
+   * expect(b.isErr).toBe(true);
+   * expect(a.err).toEqual("oops");
    */
   static toResult =
     <B>(error: B) =>
@@ -1101,6 +1141,14 @@ export class Option<A> {
    * `sequenceArray: Option<T>[] -> Option<T[]>`
    *
    * ---
+   * @example
+   * const arr1 = [some(1), some(2), some(3)];
+   * const act1 = Option.sequenceArray(arr1);
+   * expect(act1.value).toEqual([1, 2, 3]);
+   *
+   * const arr2 = [some(1), none(), some(3)];
+   * const act2 = Option.sequenceArray(arr2);
+   * expect(act2.isNone).toBe(true);
    */
   static sequenceArray = <T>(ts: Option<T>[]): Option<T[]> => {
     let result = [];
@@ -1120,6 +1168,14 @@ export class Option<A> {
    * `sequenceList: List<Option<T>> -> Option<List<T>>`
    *
    * ---
+   * @example
+   * const lst1 = list(some(1), some(2), some(3));
+   * const act1 = Option.sequenceList(lst1);
+   * expect(act1.value.toArray()).toEqual([1, 2, 3]);
+   *
+   * const lst2 = list(some(1), none(), some(3));
+   * const act2 = Option.sequenceList(lst2);
+   * expect(act2.isNone).toBe(true);
    */
   static sequenceList = <T>(ts: List<Option<T>>): Option<List<T>> => {
     let result = [];
@@ -1139,6 +1195,14 @@ export class Option<A> {
    * `sequenceSeq: Seq<Option<T>> -> Option<Seq<T>>`
    *
    * ---
+   * @example
+   * const sq1 = seq(some(1), some(2), some(3));
+   * const act1 = Option.sequenceSeq(sq1);
+   * expect(act1.value.toArray()).toEqual([1, 2, 3]);
+   *
+   * const sq2 = seq(some(1), none(), some(3));
+   * const act2 = Option.sequenceSeq(sq2);
+   * expect(act2.isNone).toBe(true);
    */
   static sequenceSeq = <T>(ts: Seq<Option<T>>): Option<Seq<T>> => {
     let result = [];
@@ -1175,7 +1239,7 @@ export class Option<A> {
  * `some: T -> Option<T>`
  *
  * ---
- * Creates a `Some` `Option<T>` from a value that is NOT null or undefined;
+ * Creates a `Some` `Option<T>` from a value that is NOT null or undefined.
  * @example
  * const x = some(5);
  * expect(x.value).toEqual(5);
@@ -1196,7 +1260,7 @@ export const none = Option.none;
  * `option: T -> Option<T>`
  *
  * ---
- * Creates an Option<T> from a value T that may or may not be null or undefined.
+ * Creates an `Option<T>` from a value `T` that may or may not be null or undefined.
  * @example
  * const x = option(5);
  * expect(x.value).toEqual(5);

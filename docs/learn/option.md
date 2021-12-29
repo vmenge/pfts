@@ -55,7 +55,7 @@ num.isSome; // false
 We could've just used regular TypeScript and returned `string | undefined` in this simple example. The real benefit of
 the `Option` starts to become more apparent when using its methods.
 
-## **map**
+## **.map()**
 
 `this: Option<A>`
 
@@ -91,7 +91,7 @@ returning a new `Option` with the resulting value.
 > empty then the mapping function doesn't really do anything, but if it has something inside of it, the mapping function will
 > alter that value just like it would in an `Array` with only one element.
 
-## **bind**
+## **.bind()**
 
 `this: Option<A>`
 
@@ -159,7 +159,7 @@ Ideally you want to pass the `Option` around, using `.map()` and `.bind()` (or c
 At some point you will need to resolve that value, and decide what to do when the value is there (or not).
 How does one access the value inside of the `Option`?
 
-## **match**
+## **.match()**
 
 `this: Option<A>`
 
@@ -181,7 +181,7 @@ const y = none().match(
 ); // y is 0
 ```
 
-## **defaultValue**
+## **.defaultValue()**
 
 `this: Option<A>`
 
@@ -199,7 +199,7 @@ const b = some(9).defaultValue(5);
 // b is 9
 ```
 
-## **defaultWith**
+## **.defaultWith()**
 
 `this: Option<A>`
 
@@ -252,7 +252,7 @@ if (a.isSome) {
 
 Sometimes you have to deal with multiple Options, or you require multiple optional values to do something. `Option` provides various ways to deal with that, zipping, sequencing or using computation expressions are the most common ones.
 
-## **zip**
+## **.zip()**
 
 `this: Option<A>`
 
@@ -277,7 +277,7 @@ const noneTuple = a.zip(c);
 
 > You can also use `.zip3()` if you need to zip together 3 Options.
 
-## **Option.sequenceList**
+## **::sequenceList()**
 
 `sequenceList: List<Option<T>> -> Option<List<T>>`
 
@@ -310,7 +310,7 @@ nums.isSome; // false, since "not a number" was None.
 
 > There is also `Option.sequenceArray` available, which works the exact same way but with an `Array<Option<T>>`
 
-## Computation Expression
+## ::ce() - Computation Expression
 
 The `Option` computation expression provides an easy way to make use of nested Options, controlling the flow of code execution and returning early whenever an `Option` is `None`.
 
@@ -360,4 +360,4 @@ const createProfile = (rawHandle: string, rawEamil: string, rawUri: string) =>
 
 ## More
 
-Take a look at the [Option docs](/docs/option.md) to find out all the other methods available to it, and keep on reading the guide section, moving on to the [Result](/learn/result.md?id=resultlta-bgt) next.
+Take a look at the [Option docs](/docs/option.md.md) to find out all the other methods available to it, and keep on reading the guide section, moving on to the [Result](/learn/result.md.md) next.

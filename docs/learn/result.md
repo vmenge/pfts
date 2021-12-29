@@ -7,7 +7,7 @@ When that value is `A` then the Result is `Ok`. When the value is `B`, then the 
 We use `Result<A, B>` so we can avoid using `throw`. The philosophy `pfts` follows is that `throw` should only be used
 for unrecoverable errors, when there is really nothing you can do about it and you'd rather have your application crash.
 
-> I highly encourage you to read the [Option section](/learn/option.md?id=optionltagt) first, as it shares a lot of
+> I highly encourage you to read the [Option section](/learn/option.md.md) first, as it shares a lot of
 > the concepts presented here.
 
 ## Creating a `Result`
@@ -59,7 +59,7 @@ The caller of the function would then use some sort of type guard to check what 
 but can quickly get cumbersome depending on the types you're using and involves a lot of boilerplate that can be abstracted
 away by using the `Result` type and it's available methods.
 
-## **map**
+## **.map()**
 
 `this: Result<A, B>`
 
@@ -91,7 +91,7 @@ const res = parseNum("1").map(x => x + 5);
 `.map()` applies a mapping function on the value inside the `Result` if it is `Ok`,
 returning a new `Result` with the resulting value.
 
-## **bind**
+## **.bind()**
 
 `this: Result<A, B>`
 
@@ -178,7 +178,7 @@ const c = findUserAndDoSomething("2");
 
 > `unit` is a variable of type `void`, indicating the abscence of a specific value.
 
-## **mapErr**
+## **.mapErr()**
 
 `this: Result<A, B>`
 
@@ -218,7 +218,7 @@ const createPost = (dto: PostContentDto): Result<Post, CreatePostError> =>
 Like the `Option` type, ideally you want to pass the `Result` around using `.map()` and `.bind()` (or computation expressions) to work with the values inside the `Result`.
 At some point you will need to resolve that value, and decide what to do with the `Ok` or `Err` value.
 
-## **match**
+## **.match()**
 
 `this: Result<A, B>`
 
@@ -246,7 +246,7 @@ parseNum("bla").match(
 ); // prints "Error: not a number
 ```
 
-## **defaultValue**
+## **.defaultValue()**
 
 `this: Result<A, B>`
 
@@ -264,7 +264,7 @@ const b = ok(9).defaultValue(5);
 // b is 9
 ```
 
-## **defaultWith**
+## **.defaultWith()**
 
 `this: Result<A, B>`
 
@@ -332,7 +332,7 @@ if (a.isOk) {
 `Result` provides various ways to deal with multplie values:
 zipping, sequencing or using computation expressions are the most common ones.
 
-## **zip**
+## **.zip()**
 
 `this: Result<A, B>`
 
@@ -365,7 +365,7 @@ const errTup3 = d.zip(c);
 
 > You can also use `.zip3()` if you need to zip together 3 Options.
 
-## **Result.sequenceList**
+## **::sequenceList()**
 
 `sequenceList: List<Result<A, B>> -> Result<List<A>, B>`
 
@@ -399,7 +399,7 @@ num.err; // would probably return "bla is not a number" depending on what parseN
 
 > There is also `Result.sequenceArray` available, which works the exact same way but with an `Array<Result<A, B>>`
 
-## **Result.hoard**
+## **::hoard()**
 
 `hoard: Result<A, Err> * Result<B, Err> * Result<C, Err> ... -> Result<A * B * C..., List<Err>>`
 
@@ -416,7 +416,7 @@ const errResults = Result.hoard([ok(1), err("oops"), ok(true), err("oh no!")]);
 // errResults.raw is list("oops", "oh no!")
 ```
 
-## **Result.collect**
+## **::collect()**
 
 `collect: Record<string, Result<any, Err>> -> Result<Record<string, any>, List<Err>>`
 
@@ -434,7 +434,7 @@ const errs = Result.collect({ d: ok(99), e: err("oops"), f: err("oh no!") });
 // errs.raw is list("oops", "oh no!")
 ```
 
-## Computation Expression
+## ::ce() - Computation Expression
 
 The `Result` computation expression provides an easy way to make use of nested Results, controlling the flow of code execution and returning early whenever a `Result` is `Err`.
 
@@ -459,5 +459,5 @@ const createProfile = (rawHandle: string, rawEamil: string, rawUri: string) =>
 
 ## More
 
-Take a look at the [Result docs](/docs/result.md) to find out all the other methods available to it, and keep on reading
-the guide section, moving on to [Async](/learn/async.md) next.
+Take a look at the [Result docs](/docs/result.md.md) to find out all the other methods available to it, and keep on reading
+the guide section, moving on to [Async](/learn/async.md.md) next.

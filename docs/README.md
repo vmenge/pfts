@@ -1,4 +1,4 @@
-# `pfts` - Pragmatic Functional TypeScript <!-- {docsify-ignore-all} -->
+# `pfts` </br> Pragmatic Functional TypeScript
 
 `pfts` is a opinionated TypeScript library heavily inspired by F#'s pragmatic and practical approach to functional programming, and by the way both it and Rust handles errors.
 

@@ -1,4 +1,4 @@
-import { async, list, List, none, Num, Seq, some } from "@pfts/core/src";
+import { async, err, list, List, none, Num, ok, Seq, some } from "@pfts/core/src";
 
 describe("List", () => {
   describe("List.new()", () => {
@@ -547,7 +547,7 @@ describe("List", () => {
   });
 
   describe(".zip()", () => {
-    it("pairs elements of two lists with the each other as long as they have the same length", () => {
+    it("Pairs elements of two lists with the each other as long as they have the same length", () => {
       const lst1 = list(1, 2, 3);
       const lst2 = list("a", "b", "c");
 
@@ -628,6 +628,132 @@ describe("List", () => {
     it("Adds all the elements of the list into a string, separated by the specified separator string.", () => {
       const a = list(1, 2, 3).join(", ");
       expect(a).toEqual("1, 2, 3");
+    });
+  });
+
+  describe("List.empty", () => {
+    it("Returns an empty list", () => {
+      const a = List.empty;
+      expect(a).toBeInstanceOf(List);
+      expect(a.isEmpty).toBe(true);
+    });
+  });
+
+  describe("List.map()", () => {
+    it("Maps over a list", () => {
+      const actual = List.map((x: number) => x * 2)(list(1, 5));
+      const expected = list(2, 10);
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.flatMap()", () => {
+    it("Calls a mapping function on each element of `List<A>`, then flattens the result.", () => {
+      const actual = List.flatMap((x: number) => list(x + 10, x + 20))(list(1, 2, 3));
+      const expected = list(11, 21, 12, 22, 13, 23);
+
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.rejectNones()", () => {
+    it("Rejects all elements that are None, and extracts the values of the elements that are Some", () => {
+      const actual = list(some(1), none(), some(2), none()).to(List.rejectNones);
+      const expected = list(1, 2);
+
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.rejectErrs()", () => {
+    it("Rejects all elements that are Err, and extracts the values of the elements that are Ok.", () => {
+      const lst = list(ok(1), ok(2), err("oops"));
+
+      const actual = List.rejectErrs(lst);
+      const expected = list(1, 2);
+
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.partitionResults()", () => {
+    it("Paritions a List of Results into a List with the extracted Oks and another List with the extracted Errs", () => {
+      const lst = list(ok(1), ok(2), err("oops"));
+      const [oks, errs] = List.partitionResults(lst);
+
+      const expectedOks = list(1, 2);
+      const expectedErrs = list("oops");
+
+      expect(oks.toArray()).toEqual(expectedOks.toArray());
+      expect(errs.toArray()).toEqual(expectedErrs.toArray());
+    });
+  });
+
+  describe("List.sum()", () => {
+    it("Sums all numbers in a List", () => {
+      const actual = List.sum(list(1, 2, 3));
+      expect(actual).toEqual(6);
+    });
+  });
+
+  describe("List.average()", () => {
+    it("Sums all numbers in a List and divides by the List's length.", () => {
+      const actual = List.average(list(2, 3, 10));
+      expect(actual).toEqual(5);
+    });
+  });
+
+  describe("List.flatten()", () => {
+    it("Flattens a List of Lists", () => {
+      const lst = list(list(1, 2), list(3, 4), list(5, 6));
+      const actual = List.flatten(lst);
+      const expected = list(1, 2, 3, 4, 5, 6);
+
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.init()", () => {
+    it("Creates a list by calling the given initializer on each index", () => {
+      const actual = List.init(3)(n => n.toString());
+      const expected = list("0", "1", "2");
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.replicate()", () => {
+    it("Creates a List by replicating a value by the given count.", () => {
+      const actual = List.replicate(3)("z");
+      const expected = list("z", "z", "z");
+      expect(actual.toArray()).toEqual(expected.toArray());
+    });
+  });
+
+  describe("List.unzip()", () => {
+    it("Unzips a List of tuples of length 2", () => {
+      const lst: List<[string, number]> = list(["one", 1], ["two", 2], ["three", 3]);
+      const [act1, act2] = List.unzip(lst);
+
+      const exp1 = list("one", "two", "three");
+      const exp2 = list(1, 2, 3);
+
+      expect(act1.toArray()).toEqual(exp1.toArray());
+      expect(act2.toArray()).toEqual(exp2.toArray());
+    });
+  });
+
+  describe("List.unzip3()", () => {
+    it("Unzips a List of tuples of length 2", () => {
+      const lst: List<[string, number, boolean]> = list(["one", 1, true], ["two", 2, true], ["three", 3, false]);
+      const [act1, act2, act3] = List.unzip3(lst);
+
+      const exp1 = list("one", "two", "three");
+      const exp2 = list(1, 2, 3);
+      const exp3 = list(true, true, false);
+
+      expect(act1.toArray()).toEqual(exp1.toArray());
+      expect(act2.toArray()).toEqual(exp2.toArray());
+      expect(act3.toArray()).toEqual(exp3.toArray());
     });
   });
 });

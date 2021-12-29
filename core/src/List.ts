@@ -1236,6 +1236,24 @@ export class List<A> {
     return new List([...this._elements].reverse());
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `zip: List<B> -> Option<List<A * B>>`
+   *
+   * ---
+   * Pairs elements of two lists with the each other as long as they have the same length.
+   * @example
+   * const lst1 = list(1, 2, 3);
+   * const lst2 = list("a", "b", "c");
+   *
+   * const actual = lst1.zip(lst2);
+   * expect(actual.value.toArray()).toEqual([
+   *   [1, "a"],
+   *   [2, "b"],
+   *   [3, "c"],
+   * ]);
+   */
   zip<B>(list: List<B>): Option<List<[A, B]>> {
     if (this.length !== list.length) {
       return none();
@@ -1250,6 +1268,25 @@ export class List<A> {
     return some(List.ofArray(res));
   }
 
+  /**
+   * `this: List<A>`
+   *
+   * `zip3: (List<B>, List<C>) -> Option<List<A * B * C>>`
+   *
+   * ---
+   * Pairs elements of three lists with the each other as long as they have the same length.
+   * @example
+   * const lst1 = list(1, 2, 3);
+   * const lst2 = list("a", "b", "c");
+   * const lst3 = list(true, true, false);
+   *
+   * const actual = lst1.zip3(lst2, lst3);
+   * expect(actual.value.toArray()).toEqual([
+   *   [1, "a", true],
+   *   [2, "b", true],
+   *   [3, "c", false],
+   * ]);
+   */
   zip3<B, C>(list2: List<B>, list3: List<C>): Option<List<[A, B, C]>> {
     if (this.length !== list2.length || list2.length !== list3.length) {
       return none();
@@ -1378,33 +1415,71 @@ export class List<A> {
   }
 
   /**
-   * `empty: () -> List<A>`
+   * A `List` with 0 elements.
+   */
+  static empty = List.new<never>();
+
+  /**
+   * `map: (A -> B) -> List<A> -> List<B>`
    *
    * ---
-   * @returns an empty `List<A>`.
    * @example
-   * const a = List.empty();
-   * expect(a.isEmpty).toEqual(true);
+   * const actual = List.map(x => x * 2)(list(1, 5));
+   * const expected = list(2, 10);
+   * expect(actual.eq(expected)).toBe(true);
    */
-  static empty<A>(): List<A> {
-    return list();
-  }
-
   static map =
     <A, B>(fn: (a: A) => B) =>
     (lst: List<A>): List<B> =>
       lst.map(fn);
 
+  /**
+   * `flatMap: (A -> List<B>) -> List<A> -> List<B>`
+   *
+   * ---
+   * Calls a mapping function on each element of `List<A>`, then flattens the result.
+   * @example
+   * const actual = List.flatMap(x => list(x + 10, x + 20))(list(1, 2, 3));
+   * const expected = list(11, 21, 12, 22, 13, 23);
+   *
+   * expect(actual.eq(expected)).toEqual(true);
+   */
   static flatMap =
     <A, B>(fn: (a: A) => List<B>) =>
     (lst: List<A>): List<B> =>
       lst.flatMap(fn);
 
+  /**
+   * `rejectNones: List<Option<B>> -> List<B>`
+   *
+   * ---
+   * Rejects all elements that are `None`, and extracts the values of the elements that are `Some`.
+   * @example
+   * const lst = list(Num.parse("1"), Num.parse("2"), Num.parse("bla"));
+   *
+   * const actual = List.rejectNones(lst);
+   * const expected = list(1, 2);
+   *
+   * expect(actual.eq(expected)).toBe(true);
+   */
   static rejectNones<B>(optList: List<Option<B>>): List<B> {
     return optList.choose(x => x);
   }
 
-  static rejectErrors<B, C>(resultList: List<Result<B, C>>): List<B> {
+  /**
+   * `rejectErrs: List<Result<B, C>> -> List<B>`
+   *
+   * ---
+   * Rejects all elements that are `Err`, and extracts the values of the elements that are `Ok`.
+   * @example
+   * const lst = list(ok(1), ok(2), err("oops"));
+   *
+   * const actual = List.rejectErrs(lst);
+   * const expected = list(1, 2);
+   *
+   * expect(actual.eq(expected)).toBe(true);
+   */
+  static rejectErrs<B, C>(resultList: List<Result<B, C>>): List<B> {
     let res = [];
 
     for (const x of resultList) {
@@ -1416,30 +1491,75 @@ export class List<A> {
     return new List(res);
   }
 
+  /**
+   * `partitionResults: List<Result<B, C>> -> List<B> * List<C>`
+   *
+   * ---
+   * Paritions a List of Results into a List with the extracted Oks and another List with the extracted Errs.
+   * @example
+   * const lst = list(ok(1), ok(2), err("oops"));
+   * const [oks, errs] = List.partitionResults(lst);
+   *
+   * const expectedOks = list(1, 2);
+   * const expectedErrs = list("oops");
+   *
+   * expect(oks.eq(expectedOks)).toBe(true);
+   * expect(errs.eq(expectedErrs)).toBe(true);
+   */
   static partitionResults<B, C>(resultList: List<Result<B, C>>): [List<B>, List<C>] {
     let oks = [];
     let errs = [];
 
     for (const r of resultList) {
       if (r.isOk) {
-        oks.push(r.value);
+        oks.push(r.raw as B);
+      } else {
+        errs.push(r.raw as C);
       }
-
-      errs.push(r.errToArray());
     }
 
-    return [new List(oks), new List(errs.flat())];
+    return [new List(oks), new List(errs)];
   }
 
+  /**
+   * `sum: List<number> -> number`
+   *
+   * ---
+   * Sums all the number in a `List`.
+   * @example
+   * const actual = List.sum(list(1, 2, 3));
+   * expect(actual).toEqual(6);
+   */
   static sum(list: List<number>): number {
     return list.fold((a, c) => a + c, 0);
   }
 
+  /**
+   * `average: List<number> -> number`
+   *
+   * ---
+   * Sums all numbers in a List and divides by the List's length.
+   * @example
+   * const actual = List.average(list(2, 3, 10));
+   * expect(actual).toEqual(5);
+   */
   static average(list: List<number>): number {
     return List.sum(list) / list.length;
   }
 
-  static concat<B>(list: List<List<B>>): List<B> {
+  /**
+   * `flatten: List<List<B>> -> List<B>`
+   *
+   * ---
+   * Flattens a List of Lists.
+   * @example
+   * const lst = list(list(1, 2), list(3, 4), list(5, 6));
+   * const actual = List.flatten(lst);
+   * const expected = list(1, 2, 3, 4, 5, 6);
+   *
+   * expect(actual.eq(expected)).toBe(true);
+   */
+  static flatten<B>(list: List<List<B>>): List<B> {
     return list.flatMap(x => x);
   }
 
@@ -1463,6 +1583,7 @@ export class List<A> {
    * `replicate: number -> B -> List<B>`
    *
    * ---
+   * Creates a List by replicating a value by the given count.
    * @example
    * const actual = List.replicate(3)("z");
    * const expected = list("z", "z", "z");
@@ -1474,6 +1595,21 @@ export class List<A> {
       return List.init(count)(() => value);
     };
 
+  /**
+   * `unzip: List<A * B> -> List<A> * List<B>`
+   *
+   * ---
+   * Unzips a List of tuples of length 2
+   * @example
+   * const lst: List<[string, number]> = list(["one", 1], ["two", 2], ["three", 3]);
+   * const [act1, act2] = List.unzip(lst);
+   *
+   * const exp1 = list("one", "two", "three");
+   * const exp2 = list(1, 2, 3);
+   *
+   * expect(act1.eq(exp1)).toBe(true);
+   * expect(act2.eq(exp2)).toBe(true);
+   */
   static unzip<A, B>(list: List<[A, B]>): [List<A>, List<B>] {
     let fst = [];
     let snd = [];
@@ -1486,6 +1622,25 @@ export class List<A> {
     return [new List(fst), new List(snd)];
   }
 
+  /**
+   * `unzip3: List<A * B * C> -> List<A> * List<B> * List<C>`
+   *
+   * ---
+   * Unzips a List of tuples of length 3
+   * @example
+   * const lst: List<[string, number, boolean]> = list(
+   *   ["one", 1, true], ["two", 2, true], ["three", 3, false]
+   * );
+   * const [act1, act2, act3] = List.unzip3(lst);
+   *
+   * const exp1 = list("one", "two", "three");
+   * const exp2 = list(1, 2, 3);
+   * const exp3 = list(true, true, false);
+   *
+   * expect(act1.eq(exp1)).toBe(true);
+   * expect(act2.eq(exp2)).toBe(true);
+   * expect(act3.eq(exp3)).toBe(true);
+   */
   static unzip3<A, B, C>(list: List<[A, B, C]>): [List<A>, List<B>, List<C>] {
     let fst = [];
     let snd = [];

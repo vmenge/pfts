@@ -1,47 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <title>Document</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Description" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/sidebar.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>My Docs</title>
+    <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      * {
-        --code-inline-color: #ec5151;
+      body {
+        font-family: "Open Sans";
       }
     </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="docute"></div>
+    <script src="https://unpkg.com/docute@4/dist/docute.js"></script>
+    <script src="https://unpkg.com/docute-google-analytics@1/dist/index.min.js"></script>
     <script>
-      window.$docsify = {
-        name: "pfts",
-        repo: "https://github.com/vmenge/pfts",
-        subMaxLevel: 2,
-        loadSidebar: true,
-        autoHeader: true,
-        themeable: {
-          readyTransition: true,
-          responsiveTables: true,
+      new Docute({
+        target: "#docute",
+        layout: "wide",
+        highlight: ["typescript", "bash"],
+        cssVariables: {
+          sidebarWidth: "320px",
         },
-        tabs: {
-          persist: true, // default
-          sync: true, // default
-          theme: "classic", // default
-          tabComments: true, // default
-          tabHeadings: true, // default
-        },
-      };
+        plugins: [docuteGoogleAnalytics("G-WBY1SPWD5P")],
+        title: "pfts docs",
+        nav: [
+          { title: "Home", link: "/" },
+          { title: "GitHub", link: "https://github.com/vmenge/pfts" },
+        ],
+        sidebar: [
+          {
+            title: "Docs",
+            children: [
+              {
+                title: "Option",
+                link: "/docs/option.md",
+              },
+            ],
+          },
+          {
+            title: "Learn",
+            children: [
+              {
+                title: "Option basics",
+                link: "/learn/option.md",
+              },
+              {
+                title: "Result basics",
+                link: "/learn/result.md",
+              },
+            ],
+          },
+          {
+            title: "Examples",
+            children: [],
+          },
+        ],
+      });
     </script>
-    <!-- Docsify v4 -->
-    <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs@1.25.0/components/prism-typescript.min.js"></script>
-    <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
   </body>
 </html>
