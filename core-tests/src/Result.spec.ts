@@ -1,7 +1,7 @@
 import { err, Option, list, ok, Result, id, AsyncResult, Fn, some, none, List, seq, Seq } from "@pfts/core/src";
 
 describe("Result", () => {
-  describe("Result.ok()", () => {
+  describe("::ok()", () => {
     it("Creates an Ok", () => {
       const res = Result.ok(1);
       expect(res.isOk).toEqual(true);
@@ -9,7 +9,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.err()", () => {
+  describe("::err()", () => {
     it("Creates an Err", () => {
       const res = Result.err("oops");
       expect(res.isErr).toEqual(true);
@@ -482,7 +482,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.ofOption()", () => {
+  describe("::ofOption()", () => {
     it("Creates a Result from an Option", () => {
       const k = Result.ofOption("oops")(some(1));
       const e = Result.ofOption("oops")(none<number>());
@@ -492,7 +492,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.sequenceArray()", () => {
+  describe("::sequenceArray()", () => {
     it("Sequences an Array of Ok Results", () => {
       const arr = [ok(1), ok(2), ok(3)];
       const k = Result.sequenceArray(arr);
@@ -510,7 +510,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.sequenceList()", () => {
+  describe("::sequenceList()", () => {
     it("Sequences a List of Ok Results", () => {
       const lst = list(ok(1), ok(2), ok(3));
       const k = Result.sequenceList(lst);
@@ -528,7 +528,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.sequenceSeq()", () => {
+  describe("::sequenceSeq()", () => {
     it("Sequences a Seq of Ok Results", () => {
       const sq = seq(ok(1), ok(2), ok(3));
       const k = Result.sequenceSeq(sq);
@@ -546,7 +546,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.ce()", () => {
+  describe("::ce()", () => {
     it("Happy path works correctly", () => {
       const res = Result.ce(function* () {
         const a = yield* ok(5);
@@ -572,7 +572,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.hoard()", () => {
+  describe("::hoard()", () => {
     describe("Tuple Size: 2", () => {
       it("Happy path", () => {
         const a = ok(5);
@@ -649,7 +649,7 @@ describe("Result", () => {
     });
   });
 
-  describe("Result.collect()", () => {
+  describe("::collect()", () => {
     it("Happy path", () => {
       const res = Result.collect({
         firstName: ok("john"),

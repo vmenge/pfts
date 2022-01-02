@@ -30,7 +30,7 @@ export class Option<A> {
    * `some: T -> Option<T>`
    *
    * ---
-   * Creates a `Some` `Option<T>` from a value that is NOT null or undefined;
+   * Creates a `Some` `Option<T>` from a value that is NOT null or undefined.
    * @example
    * const x = Option.some(5);
    * expect(x.value).toEqual(5);
@@ -676,7 +676,7 @@ export class Option<A> {
    * ---
    * Pipes this current `Option` instance as an argument to the given function.
    * @example
-   * const a = some("3").pipe(x => Number(x.value));
+   * const a = some("3").to(x => Number(x.value));
    * expect(a).toEqual(3);
    */
   to<B>(fn: (a: Option<A>) => B): B {

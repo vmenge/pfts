@@ -1,7 +1,7 @@
 import { err, ok, async, asyncResult, AsyncResult } from "@pfts/core/src";
 
 describe("AsyncResult", () => {
-  describe("AsyncResult.ce()", () => {
+  describe("::ce()", () => {
     it("Happy path works correctly", done => {
       const res = AsyncResult.ce(function* () {
         const a = yield* ok(5);

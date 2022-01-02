@@ -920,7 +920,9 @@ export class List<A> {
    * expect(actual.eq(expected)).toEqual(true);
    */
   sort(): List<A> {
-    return new List([...this._elements].sort());
+    const sortFn = typeof this._elements[0] === "number" ? (a: A, b: A) => (a as any) - (b as any) : undefined;
+
+    return new List([...this._elements].sort(sortFn));
   }
 
   /**

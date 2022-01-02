@@ -1,7 +1,7 @@
 import { none, some, async, asyncOption, AsyncOption } from "@pfts/core/src";
 
 describe("AsyncOption", () => {
-  describe("AsyncOption.ce()", () => {
+  describe("::ce()", () => {
     it("Happy path works correctly", done => {
       const res = AsyncOption.ce(function* () {
         const a = yield* some(5);

@@ -1,9 +1,9 @@
-# Option&lt;A&gt; docs
+# Option
 
 This page will contain a list of all associated functions, static and instance methods and properties from `Option`. To learn how to use the `Option`
 type, check the [Option basics](/learn/option.md.md) page.
 
-## option
+## option()
 
 > `option: T -> Option<T>`
 
@@ -18,7 +18,7 @@ const y = option(undefined);
 expect(y.isNone).toEqual(true);
 ```
 
-## some
+## some()
 
 > `some: T -> Option<T>`
 
@@ -29,7 +29,7 @@ const x = some(5);
 expect(x.value).toEqual(5);
 ```
 
-## none
+## none()
 
 > `none: () -> Option<T>`
 
@@ -391,7 +391,7 @@ expect(b).toEqual(100);
 Pipes this current `Option` instance as an argument to the given function.
 
 ```ts
-const a = some("3").pipe(x => Number(x.value));
+const a = some("3").to(x => Number(x.value));
 expect(a).toEqual(3);
 ```
 
