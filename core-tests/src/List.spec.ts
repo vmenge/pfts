@@ -1,7 +1,7 @@
 import { async, err, list, List, none, Num, ok, Seq, some } from "@pfts/core/src";
 
 describe("List", () => {
-  describe("List.new()", () => {
+  describe("::new()", () => {
     it("Creates a new List", () => {
       const lst = List.new(1, 2, 3);
       expect(lst).toBeInstanceOf(List);
@@ -9,7 +9,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.ofArray()", () => {
+  describe("::ofArray()", () => {
     it("Creates a List from an Array", () => {
       const lst = List.ofArray([1, 2, 3]);
       expect(lst).toBeInstanceOf(List);
@@ -17,7 +17,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.range()", () => {
+  describe("::range()", () => {
     it("Creates an ascending range", () => {
       const l1 = List.range(0, 5);
       expect(l1.toArray()).toEqual([0, 1, 2, 3, 4, 5]);
@@ -380,8 +380,11 @@ describe("List", () => {
 
   describe(".sort()", () => {
     it("returns a new list with its elements sorted.", () => {
-      const actual = list(4, 1, 8).sort();
-      expect(actual.toArray()).toEqual([1, 4, 8]);
+      const actual = list(4, 1, 8, 12, 45, 36, 23).sort();
+      expect(actual.toArray()).toEqual([1, 4, 8, 12, 23, 36, 45]);
+
+      const actual2 = list("c", "b", "a", "d", "e").sort();
+      expect(actual2.toArray()).toEqual(["a", "b", "c", "d", "e"]);
     });
   });
 
@@ -631,7 +634,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.empty", () => {
+  describe("::empty", () => {
     it("Returns an empty list", () => {
       const a = List.empty;
       expect(a).toBeInstanceOf(List);
@@ -639,7 +642,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.map()", () => {
+  describe("::map()", () => {
     it("Maps over a list", () => {
       const actual = List.map((x: number) => x * 2)(list(1, 5));
       const expected = list(2, 10);
@@ -647,7 +650,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.flatMap()", () => {
+  describe("::flatMap()", () => {
     it("Calls a mapping function on each element of `List<A>`, then flattens the result.", () => {
       const actual = List.flatMap((x: number) => list(x + 10, x + 20))(list(1, 2, 3));
       const expected = list(11, 21, 12, 22, 13, 23);
@@ -656,7 +659,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.rejectNones()", () => {
+  describe("::rejectNones()", () => {
     it("Rejects all elements that are None, and extracts the values of the elements that are Some", () => {
       const actual = list(some(1), none(), some(2), none()).to(List.rejectNones);
       const expected = list(1, 2);
@@ -665,7 +668,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.rejectErrs()", () => {
+  describe("::rejectErrs()", () => {
     it("Rejects all elements that are Err, and extracts the values of the elements that are Ok.", () => {
       const lst = list(ok(1), ok(2), err("oops"));
 
@@ -676,7 +679,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.partitionResults()", () => {
+  describe("::partitionResults()", () => {
     it("Paritions a List of Results into a List with the extracted Oks and another List with the extracted Errs", () => {
       const lst = list(ok(1), ok(2), err("oops"));
       const [oks, errs] = List.partitionResults(lst);
@@ -689,21 +692,21 @@ describe("List", () => {
     });
   });
 
-  describe("List.sum()", () => {
+  describe("::sum()", () => {
     it("Sums all numbers in a List", () => {
       const actual = List.sum(list(1, 2, 3));
       expect(actual).toEqual(6);
     });
   });
 
-  describe("List.average()", () => {
+  describe("::average()", () => {
     it("Sums all numbers in a List and divides by the List's length.", () => {
       const actual = List.average(list(2, 3, 10));
       expect(actual).toEqual(5);
     });
   });
 
-  describe("List.flatten()", () => {
+  describe("::flatten()", () => {
     it("Flattens a List of Lists", () => {
       const lst = list(list(1, 2), list(3, 4), list(5, 6));
       const actual = List.flatten(lst);
@@ -713,7 +716,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.init()", () => {
+  describe("::init()", () => {
     it("Creates a list by calling the given initializer on each index", () => {
       const actual = List.init(3)(n => n.toString());
       const expected = list("0", "1", "2");
@@ -721,7 +724,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.replicate()", () => {
+  describe("::replicate()", () => {
     it("Creates a List by replicating a value by the given count.", () => {
       const actual = List.replicate(3)("z");
       const expected = list("z", "z", "z");
@@ -729,7 +732,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.unzip()", () => {
+  describe("::unzip()", () => {
     it("Unzips a List of tuples of length 2", () => {
       const lst: List<[string, number]> = list(["one", 1], ["two", 2], ["three", 3]);
       const [act1, act2] = List.unzip(lst);
@@ -742,7 +745,7 @@ describe("List", () => {
     });
   });
 
-  describe("List.unzip3()", () => {
+  describe("::unzip3()", () => {
     it("Unzips a List of tuples of length 2", () => {
       const lst: List<[string, number, boolean]> = list(["one", 1, true], ["two", 2, true], ["three", 3, false]);
       const [act1, act2, act3] = List.unzip3(lst);

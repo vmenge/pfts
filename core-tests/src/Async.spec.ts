@@ -1,7 +1,7 @@
 import { async, Async, list, some, Option, ok, err, Result } from "@pfts/core/src";
 
 describe("Async", () => {
-  describe("Async.new()", () => {
+  describe("::new()", () => {
     it("Creates an Async<number> from 5", done => {
       const val = Async.new(5);
 
@@ -25,7 +25,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.ofPromise()", () => {
+  describe("::ofPromise()", () => {
     it("Creates an Async<string> from Promise<string>", done => {
       const val = Async.ofPromise(Promise.resolve("bla"));
 
@@ -49,7 +49,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.map()", () => {
+  describe("::map()", () => {
     it("Executes code against the Async<number> value once the async operation completes.", done => {
       Async.map((x: number) => x * 2)(async(10)).iter(x => {
         expect(x).toEqual(20);
@@ -69,7 +69,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.map2()", () => {
+  describe("::map2()", () => {
     it("Executes code against both Async<number> values once their operations are completed", done => {
       Async.map2((x: number, y: number) => x + y)(async(10))(async(5)).iter(x => {
         expect(x).toEqual(15);
@@ -105,7 +105,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.bind()", () => {
+  describe("::bind()", () => {
     it("Executes the binder function returning the exepected value", done => {
       Async.bind((x: number) => async(x + 50))(async(10)).iter(x => {
         expect(x).toEqual(60);
@@ -170,7 +170,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.sequenceArray()", () => {
+  describe("::sequenceArray()", () => {
     it("Sequences a Async<number>[]", done => {
       const asyncArr = [1, 2, 3].map(async);
       const actual = Async.sequenceArray(asyncArr);
@@ -196,7 +196,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.sequenceList()", () => {
+  describe("::sequenceList()", () => {
     it("Sequences a List<Async<number>>", done => {
       const asyncList = list(1, 2, 3).map(async);
       const actual = Async.sequenceList(asyncList);
@@ -226,7 +226,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.sequenceOption()", () => {
+  describe("::sequenceOption()", () => {
     it("Sequences an Option<Async<number>>", done => {
       const optAsync = some(async(5));
       const asyncOpt = Async.sequenceOption(optAsync);
@@ -241,7 +241,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.sequenceResult()", () => {
+  describe("::sequenceResult()", () => {
     it("Sequences a Result<Async<number>, _>", done => {
       const resAsync = ok(async(5));
       const asyncRes = Async.sequenceResult(resAsync);
@@ -256,7 +256,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.sequenceErr()", () => {
+  describe("::sequenceErr()", () => {
     it("Sequences a Result<_, Async<string>>", done => {
       const resAsync = err(async("oops"));
       const asyncRes = Async.sequenceErr(resAsync);
@@ -271,7 +271,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.flatten()", () => {
+  describe("::flatten()", () => {
     it("Flattens a Async<Async<number>> into a Async<number>", done => {
       Async.flatten(async(async(5))).iter(x => {
         expect(x).toEqual(5);
@@ -280,7 +280,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.sequenceOption()", () => {
+  describe("::sequenceOption()", () => {
     it("Sequences an Option<Async<number>> into a Async<Option<number>>", done => {
       const a = some(async(5));
       const b = Async.sequenceOption(a);
@@ -290,7 +290,7 @@ describe("Async", () => {
     });
   });
 
-  describe("Async.ce()", () => {
+  describe("::ce()", () => {
     it("Works correctly", done => {
       const res = Async.ce(function* () {
         const a = yield* async(5);
