@@ -170,123 +170,12 @@ describe("Async", () => {
     });
   });
 
-  describe("::sequenceArray()", () => {
-    it("Sequences a Async<number>[]", done => {
-      const asyncArr = [1, 2, 3].map(async);
-      const actual = Async.sequenceArray(asyncArr);
-
-      expect(actual).toBeInstanceOf(Async);
-
-      actual.iter(x => {
-        expect(x).toEqual([1, 2, 3]);
-        done();
-      });
-    });
-
-    it("Sequences a Promise<number>[]", done => {
-      const promiseArr = [1, 2, 3].map(async x => x);
-      const actual = Async.sequenceArray(promiseArr);
-
-      expect(actual).toBeInstanceOf(Async);
-
-      actual.iter(x => {
-        expect(x).toEqual([1, 2, 3]);
-        done();
-      });
-    });
-  });
-
-  describe("::sequenceList()", () => {
-    it("Sequences a List<Async<number>>", done => {
-      const asyncList = list(1, 2, 3).map(async);
-      const actual = Async.sequenceList(asyncList);
-
-      expect(actual).toBeInstanceOf(Async);
-
-      actual.iter(x => {
-        const res = list(1, 2, 3).forall(y => x.contains(y));
-        expect(res).toEqual(true);
-
-        done();
-      });
-    });
-
-    it("Sequences a List<Promise<number>>", done => {
-      const promiseList = list(1, 2, 3).map(async x => x);
-      const actual = Async.sequenceList(promiseList);
-
-      expect(actual).toBeInstanceOf(Async);
-
-      actual.iter(x => {
-        const res = list(1, 2, 3).forall(y => x.contains(y));
-        expect(res).toEqual(true);
-
-        done();
-      });
-    });
-  });
-
-  describe("::sequenceOption()", () => {
-    it("Sequences an Option<Async<number>>", done => {
-      const optAsync = some(async(5));
-      const asyncOpt = Async.sequenceOption(optAsync);
-
-      expect(asyncOpt).toBeInstanceOf(Async);
-      asyncOpt.iter(x => {
-        expect(x).toBeInstanceOf(Option);
-        expect(x.raw).toEqual(5);
-
-        done();
-      });
-    });
-  });
-
-  describe("::sequenceResult()", () => {
-    it("Sequences a Result<Async<number>, _>", done => {
-      const resAsync = ok(async(5));
-      const asyncRes = Async.sequenceResult(resAsync);
-
-      expect(asyncRes).toBeInstanceOf(Async);
-      asyncRes.iter(x => {
-        expect(x).toBeInstanceOf(Result);
-        expect(x.raw).toEqual(5);
-
-        done();
-      });
-    });
-  });
-
-  describe("::sequenceErr()", () => {
-    it("Sequences a Result<_, Async<string>>", done => {
-      const resAsync = err(async("oops"));
-      const asyncRes = Async.sequenceErr(resAsync);
-
-      expect(asyncRes).toBeInstanceOf(Async);
-      asyncRes.iter(x => {
-        expect(x).toBeInstanceOf(Result);
-        expect(x.raw).toEqual("oops");
-
-        done();
-      });
-    });
-  });
-
   describe("::flatten()", () => {
     it("Flattens a Async<Async<number>> into a Async<number>", done => {
       Async.flatten(async(async(5))).iter(x => {
         expect(x).toEqual(5);
         done();
       });
-    });
-  });
-
-  describe("::sequenceOption()", () => {
-    it("Sequences an Option<Async<number>> into a Async<Option<number>>", done => {
-      const a = some(async(5));
-      const b = Async.sequenceOption(a);
-
-      expect(b).toBeInstanceOf(Async);
-      b.iter(x => expect(x).toBeInstanceOf(Option)).iter(done);
     });
   });
 

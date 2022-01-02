@@ -1,6 +1,6 @@
 import { none, option, Option, some } from "./Option";
-import { add, greaterThan, lessThan, not, subt } from "./utils";
-import { Result } from "./Result";
+import { add, greaterThan, id, lessThan, not, subt } from "./utils";
+import { err, ok, Result } from "./Result";
 import { Dict } from "./Dict";
 import { AsyncOption } from "./AsyncOption";
 import { async, Async } from "./Async";
@@ -266,7 +266,7 @@ export class List<A> {
       return res;
     });
 
-    return Async.sequenceArray(result).map(List.ofArray).map(List.rejectNones);
+    return List.sequenceAsync(result).map(List.ofArray).map(List.rejectNones);
   }
 
   /**
@@ -1414,6 +1414,164 @@ export class List<A> {
    */
   join(separator?: string): string {
     return this._elements.join(separator);
+  }
+
+  /**
+   * `traverseOption: (A -> Option<B>) -> Option<List<B>`
+   *
+   * ---
+   */
+  traverseOption<B>(fn: (a: A) => Option<B>): Option<List<B>> {
+    let res = [];
+
+    for (const el of this) {
+      const x = fn(el);
+
+      if (x.isNone) return none();
+
+      res.push(x.raw!);
+    }
+
+    return some(List.ofArray(res));
+  }
+
+  /**
+   * `traverseResult: (A -> Result<B, C>) -> Result<List<B>, C>`
+   *
+   * ---
+   */
+  traverseResult<B, C>(fn: (a: A) => Result<B, C>): Result<List<B>, C> {
+    let res = [];
+
+    for (const el of this) {
+      const x = fn(el);
+
+      if (x.isErr) return err(x.raw as C);
+
+      res.push(x.raw as B);
+    }
+
+    return ok(List.ofArray(res));
+  }
+
+  /**
+   * `traverseAsync: (A -> Async<B>) -> Async<List<B>`
+   *
+   * ---
+   */
+  traverseAsync<B>(fn: (a: A) => Async<B>): Async<List<B>> {
+    const promises = this.map(x => fn(x).promise).toArray();
+
+    return async(Promise.all(promises)).map(List.ofArray);
+  }
+
+  /**
+   * `traversePromise: (A -> Promise<B>) -> Promise<List<B>`
+   *
+   * ---
+   */
+  traversePromise<B>(fn: (a: A) => Promise<B>): Promise<List<B>> {
+    return Promise.all(this.map(x => fn(x)).toArray()).then(List.ofArray);
+  }
+
+  /**
+   * `sequenceOption: List<Option<A>> -> Option<List<A>>`
+   *
+   * ---
+   */
+  static sequenceOption<A>(lo: List<Option<A>>): Option<List<A>>;
+  /**
+   * `sequenceOption: Array<Option<A>> -> Option<Array<A>>`
+   *
+   * ---
+   */
+  static sequenceOption<A>(lo: Array<Option<A>>): Option<Array<A>>;
+  static sequenceOption<A>(lo: List<Option<A>> | Array<Option<A>>): Option<List<A> | Array<A>> {
+    if (lo instanceof List) {
+      return lo.traverseOption(id);
+    }
+
+    const res = [];
+
+    for (const el of lo) {
+      if (el.isNone) {
+        return none();
+      }
+
+      res.push(el.raw!);
+    }
+
+    return some(res);
+  }
+
+  /**
+   * `sequenceResult: List<Result<A, B>> -> Result<List<A>, B>`
+   *
+   * ---
+   */
+  static sequenceResult<A, B>(lr: List<Result<A, B>>): Result<List<A>, B>;
+  /**
+   * `sequenceResult: Array<Result<A, B>> -> Result<Array<A>, B>`
+   *
+   * ---
+   */
+  static sequenceResult<A, B>(lr: Array<Result<A, B>>): Result<Array<A>, B>;
+  static sequenceResult<A, B>(lr: List<Result<A, B>> | Array<Result<A, B>>): Result<List<A> | Array<A>, B> {
+    if (lr instanceof List) {
+      return lr.traverseResult(id);
+    }
+
+    const res = [];
+
+    for (const el of lr) {
+      if (el.isErr) {
+        return err(el.raw as B);
+      }
+
+      res.push(el.raw as A);
+    }
+
+    return ok(res);
+  }
+
+  /**
+   * `sequenceAsync: List<Async<A>> -> Async<List<A>>`
+   *
+   * ---
+   */
+  static sequenceAsync<A>(la: List<Async<A>>): Async<List<A>>;
+  /**
+   * `sequenceAsync: Array<Async<A>> -> Async<Array<A>>`
+   *
+   * ---
+   */
+  static sequenceAsync<A>(la: Array<Async<A>>): Async<Array<A>>;
+  static sequenceAsync<A>(la: List<Async<A>> | Array<Async<A>>): Async<List<A> | Array<A>> {
+    if (la instanceof List) {
+      return la.traverseAsync(id);
+    }
+
+    return async(Promise.all(la.map(x => x.promise)));
+  }
+
+  /**
+   * `sequencePromise: List<Promise<A>> -> Promise<List<A>>`
+   *
+   * ---
+   */
+  static sequencePromise<A>(lp: List<Promise<A>>): Promise<List<A>>;
+  /**
+   * `sequencePromise: Array<Promise<A>> -> Promise<Array<A>>`
+   *
+   * ---
+   */
+  static sequencePromise<A>(lp: Array<Promise<A>>): Promise<Array<A>>;
+  static sequencePromise<A>(lp: List<Promise<A>> | Array<Promise<A>>): Promise<List<A> | Array<A>> {
+    if (lp instanceof List) {
+      return lp.traversePromise(id);
+    }
+
+    return Promise.all(lp);
   }
 
   /**

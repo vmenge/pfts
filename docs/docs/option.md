@@ -857,48 +857,6 @@ expect(b.isSome).toEqual(false);
 expect(() => b.value).toThrow();
 ```
 
-## ::sequenceArray()
-
-> `sequenceArray: Option<T>[] -> Option<T[]>`
-
-```ts
-const arr1 = [some(1), some(2), some(3)];
-const act1 = Option.sequenceArray(arr1);
-expect(act1.value).toEqual([1, 2, 3]);
-
-const arr2 = [some(1), none(), some(3)];
-const act2 = Option.sequenceArray(arr2);
-expect(act2.isNone).toBe(true);
-```
-
-## ::sequenceList()
-
-> `sequenceList: List<Option<T>> -> Option<List<T>>`
-
-```ts
-const lst1 = list(some(1), some(2), some(3));
-const act1 = Option.sequenceList(lst1);
-expect(act1.value.toArray()).toEqual([1, 2, 3]);
-
-const lst2 = list(some(1), none(), some(3));
-const act2 = Option.sequenceList(lst2);
-expect(act2.isNone).toBe(true);
-```
-
-## ::sequenceSeq()
-
-> `sequenceSeq: Seq<Option<T>> -> Option<Seq<T>>`
-
-```ts
-const sq1 = seq(some(1), some(2), some(3));
-const act1 = Option.sequenceSeq(sq1);
-expect(act1.value.toArray()).toEqual([1, 2, 3]);
-
-const sq2 = seq(some(1), none(), some(3));
-const act2 = Option.sequenceSeq(sq2);
-expect(act2.isNone).toBe(true);
-```
-
 ## ::ce() - Computation Expression
 
 The `Option` computation expression provides an easy way to make use of nested Options, controlling the flow of code execution and returning early whenever an `Option` is `None`.

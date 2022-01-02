@@ -1,8 +1,12 @@
-import { ResultCollector } from ".";
+import { id } from "./utils";
+import { async, Async } from "./Async";
+import { ResultCollector } from "./type-utils";
 import { AsyncResult } from "./AsyncResult";
 import { List, list } from "./List";
 import { Option, none, option } from "./Option";
 import { seq, Seq } from "./Seq";
+import { AsyncOption } from "./AsyncOption";
+import { asyncOption } from ".";
 
 /**
  * A class that can contain an `Ok<A>` value or an `Err<B>` value.
@@ -753,6 +757,158 @@ export class Result<A, B> {
   }
 
   /**
+   * `traverseOption: (A -> Option<C>) -> Option<Result<C, B>>`
+   *
+   * ---
+   */
+  traverseOption<C>(fn: (a: A) => Option<C>): Option<Result<C, B>> {
+    if (this.isErr) {
+      return option(err(this.raw as B));
+    }
+
+    return fn(this.raw as A).map(ok);
+  }
+
+  /**
+   * `traverseAsync: (A -> Async<C>) -> Async<Result<C, B>>`
+   *
+   * ---
+   */
+  traverseAsync<C>(fn: (a: A) => Async<C>): Async<Result<C, B>> {
+    if (this.isErr) {
+      return async(err(this.raw as B));
+    }
+
+    return fn(this.raw as A).map(ok);
+  }
+
+  /**
+   * `traversePromise: (A -> Promise<C>) -> Promise<Result<C, B>>`
+   *
+   * ---
+   */
+  traversePromise<C>(fn: (a: A) => Promise<C>): Promise<Result<C, B>> {
+    if (this.isErr) {
+      return Promise.resolve(err(this.raw as B));
+    }
+
+    return fn(this.raw as A).then(ok);
+  }
+
+  /**
+   * `traverseAsyncOption: (A -> AsyncOption<C>) -> AsyncOption<C, B>`
+   *
+   * ---
+   */
+  traverseAsyncOption<C>(fn: (a: A) => AsyncOption<C>): AsyncOption<Result<C, B>>;
+  /**
+   * `traverseAsyncOption: (A -> Async<Option<C>>) -> AsyncOption<C, B>`
+   *
+   * ---
+   */
+  traverseAsyncOption<C>(fn: (a: A) => Async<Option<C>>): AsyncOption<Result<C, B>>;
+  /**
+   * `traverseAsyncOption: (A -> Promise<Option<C>>) -> AsyncOption<C, B>`
+   *
+   * ---
+   */
+  traverseAsyncOption<C>(fn: (a: A) => Promise<Option<C>>): AsyncOption<Result<C, B>>;
+  traverseAsyncOption<C>(
+    fn: (a: A) => AsyncOption<C> | Async<Option<C>> | Promise<Option<C>>
+  ): AsyncOption<Result<C, B>> {
+    if (this.isErr) {
+      return asyncOption(err(this.raw as B));
+    }
+
+    return asyncOption(fn(this.raw as A)).map(ok);
+  }
+
+  /**
+   * `traverseList: (A -> List<C>) -> List<Result<C, B>>`
+   *
+   * ---
+   */
+  traverseList<C>(fn: (a: A) => List<C>): List<Result<C, B>> {
+    if (this.isErr) {
+      return list(err(this.raw as B));
+    }
+
+    return fn(this.raw as A).map(ok);
+  }
+
+  /**
+   * `traverseArray: (A -> Array<C>) -> Array<Result<C, B>>`
+   *
+   * ---
+   */
+  traverseArray<C>(fn: (a: A) => Array<C>): Array<Result<C, B>> {
+    if (this.isErr) {
+      return [err(this.raw as B)];
+    }
+
+    return fn(this.raw as A).map(ok);
+  }
+
+  /**
+   * `sequenceOption: Result<Option<A>, B> -> Option<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceOption = <A, B>(ro: Result<Option<A>, B>): Option<Result<A, B>> => ro.traverseOption(id);
+
+  /**
+   * `sequenceAsync: Result<Async<A>, B> -> Async<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceAsync = <A, B>(ro: Result<Async<A>, B>): Async<Result<A, B>> => ro.traverseAsync(id);
+
+  /**
+   * `sequencePromise: Result<Promise<A>, B> -> Promise<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequencePromise = <A, B>(ro: Result<Promise<A>, B>): Promise<Result<A, B>> => ro.traversePromise(id);
+
+  /**
+   * `sequenceAsyncOption: Result<AsyncOption<A>, B> -> AsyncOption<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceAsyncOption<A, B>(ao: Result<AsyncOption<A>, B>): AsyncOption<Result<A, B>>;
+  /**
+   * `sequenceAsyncOption: Result<Async<Option<A>>, B> -> AsyncOption<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceAsyncOption<A, B>(ao: Result<Async<Option<A>>, B>): AsyncOption<Result<A, B>>;
+  /**
+   * `sequenceAsyncOption: Result<Promise<Option<A>>, B> -> AsyncOption<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceAsyncOption<A, B>(ao: Result<Promise<Option<A>>, B>): AsyncOption<Result<A, B>>;
+  static sequenceAsyncOption<A, B>(
+    ao: Result<AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>, B>
+  ): AsyncOption<Result<A, B>> {
+    return ao.traverseAsyncOption(x => x as any);
+  }
+
+  /**
+   * `sequenceList: Result<List<A>, B> -> List<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceList = <A, B>(ro: Result<List<A>, B>): List<Result<A, B>> => ro.traverseList(id);
+
+  /**
+   * `sequenceArray: Result<Array<A>, B> -> Array<Result<A, B>>`
+   *
+   * ---
+   */
+  static sequenceArray = <A, B>(ro: Result<Array<A>, B>): Array<Result<A, B>> => ro.traverseArray(id);
+
+  /**
    * `isOk: Result<A, B> -> boolean`
    *
    * ---
@@ -1011,30 +1167,6 @@ export class Result<A, B> {
    * expect(b.value).toEqual(3);
    */
   static flatten = <A, B>(r: Result<Result<A, B>, B>): Result<A, B> => r.bind(x => x);
-
-  /**
-   * `sequenceArray: Result<A, B>[] -> Result<A[], B>`
-   *
-   * ---
-   */
-  static sequenceArray = <A, B>(rs: Result<A, B>[]): Result<A[], B> =>
-    rs.reduce((state, curr) => state.map2(curr, (x, y) => [...x, y]), ok<A[], B>([]));
-
-  /**
-   * `sequenceList: List<Result<A, B>> -> Result<List<A>, B>`
-   *
-   * ---
-   */
-  static sequenceList = <A, B>(rs: List<Result<A, B>>): Result<List<A>, B> =>
-    rs.fold((state, curr) => state.map2(curr, (x, y) => list(...x, y)), ok<List<A>, B>(list()));
-
-  /**
-   * `sequenceSeq: Seq<Result<A, B>> -> Result<Seq<A>, B>`
-   *
-   * ---
-   */
-  static sequenceSeq = <A, B>(rs: Seq<Result<A, B>>): Result<Seq<A>, B> =>
-    Result.sequenceList(rs.toList()).map(Seq.ofList);
 
   static ce = <A, B, C>(genFn: () => Generator<Result<A, B>, C, A>): Result<C, B> => {
     const iterator = genFn();

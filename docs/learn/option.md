@@ -250,7 +250,7 @@ if (a.isSome) {
 
 ## Dealing with multiple Options
 
-Sometimes you have to deal with multiple Options, or you require multiple optional values to do something. `Option` provides various ways to deal with that, zipping, sequencing or using computation expressions are the most common ones.
+Sometimes you have to deal with multiple Options, or you require multiple optional values to do something. `Option` and `List` both provide various ways to deal with that, zipping, traversing, sequencing or using computation expressions are the most common ones.
 
 ## **.zip()**
 
@@ -277,13 +277,13 @@ const noneTuple = a.zip(c);
 
 > You can also use `.zip3()` if you need to zip together 3 Options.
 
-## **::sequenceList()**
+## **List::sequenceOption()**
 
-`sequenceList: List<Option<T>> -> Option<List<T>>`
+`sequenceOption: List<Option<T>> -> Option<List<T>>`
 
 ---
 
-When given a list of Options, `Option.sequenceList` will return an `Option` with a `List` inside that is only `Some` when
+When given a list of Options, `List.sequenceOption` will return an `Option` with a `List` inside that is only `Some` when
 **every element** of the list was `Some`.
 
 > `List` is a type included in `pfts` that is essentially an immutable array with extra methods.
@@ -294,7 +294,7 @@ declare function parseNum(s: string): Option<number>;
 const optionalNums = list("1", "2", "3").map(n => parseNum(n));
 // typeof optionalNums is List<Option<number>>
 
-const nums = Option.sequenceList(optionalNums);
+const nums = List.sequenceOption(optionalNums);
 // typeof nums is Option<List<number>>
 
 nums.value; // list(1, 2, 3);
@@ -302,13 +302,37 @@ nums.value; // list(1, 2, 3);
 const optionalNums2 = list("1", "not a number", "3").map(parseNum);
 // type of optionalNums2 is List<Option<number>>
 
-const nums2 = Option.sequenceList(optionalNums2);
+const nums2 = List.sequenceOption(optionalNums2);
 // typeof nums2 is Option<List<number>>
 
-nums.isSome; // false, since "not a number" was None.
+nums2.isSome; // false, since "not a number" was None.
 ```
 
-> There is also `Option.sequenceArray` available, which works the exact same way but with an `Array<Option<T>>`
+> There is also an overload that works with Arrays.
+
+## **List.traverseOption()**
+
+`this: List<A>`
+
+`traverseOption: (A -> Option<B>) -> Option<List<B>>`
+
+---
+
+Equivalent to calling `.map()` on a list with a function that returns an `Option` and then calling `List.sequenceOption`.
+
+```ts
+declare function parseNum(s: string): Option<number>;
+
+const nums = list("1", "2", "3").traverseOption(parseNum);
+// typeof nums is Option<List<number>>
+
+nums.value; // list(1, 2, 3);
+
+const nums2 = list("1", "not a number", "3").traverseOption(parseNum);
+// typeof nums2 is Option<List<number>>
+
+nums2.isSome; // false, since "not a number" was None.
+```
 
 ## ::ce() - Computation Expression
 

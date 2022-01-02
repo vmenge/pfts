@@ -265,43 +265,6 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
     <A>(ao: AsyncOption<A>): AsyncResult<A, B> =>
       new AsyncResult(ao.toAsync().map(Result.ofOption(err)));
 
-  static sequenceArray<A, B>(ars: AsyncResult<A, B>[]): AsyncResult<A[], B>;
-  static sequenceArray<A, B>(ars: Async<Result<A, B>>[]): AsyncResult<A[], B>;
-  static sequenceArray<A, B>(ars: Promise<Result<A, B>>[]): AsyncResult<A[], B>;
-  static sequenceArray<A, B>(
-    ars: Array<AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>>
-  ): AsyncResult<A[], B> {
-    const a = ars.map(x => normalize(x).raw);
-    const b = Async.sequenceArray(a).map(x => Result.sequenceArray(x));
-
-    return new AsyncResult(b);
-  }
-
-  static sequenceList<A, B>(ars: List<AsyncResult<A, B>>): AsyncResult<List<A>, B>;
-  static sequenceList<A, B>(ars: List<Async<Result<A, B>>>): AsyncResult<List<A>, B>;
-  static sequenceList<A, B>(ars: List<Promise<Result<A, B>>>): AsyncResult<List<A>, B>;
-  static sequenceList<A, B>(
-    ars: List<AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>>
-  ): AsyncResult<List<A>, B> {
-    const a = ars.map(x => normalize(x).raw);
-    const b = Async.sequenceList(a).map(x => Result.sequenceList(x));
-
-    return new AsyncResult(b);
-  }
-
-  static sequenceOption<A, B>(oar: Option<AsyncResult<A, B>>): AsyncResult<Option<A>, B>;
-  static sequenceOption<A, B>(oar: Option<Async<Result<A, B>>>): AsyncResult<Option<A>, B>;
-  static sequenceOption<A, B>(oar: Option<Promise<Result<A, B>>>): AsyncResult<Option<A>, B>;
-  static sequenceOption<A, B>(
-    oar: Option<AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>>
-  ): AsyncResult<Option<A>, B> {
-    if (oar.isNone) {
-      return new AsyncResult(async(ok(none())));
-    }
-
-    return normalize(oar.raw!).map(option);
-  }
-
   static ce = <A, B, C>(
     genFn: () => Generator<AsyncResult<A, B> | Async<A> | Result<A, B>, C, A>
   ): AsyncResult<C, B> => {
