@@ -1,8 +1,10 @@
-import { async } from "./Async";
+import { Async, async } from "./Async";
 import { AsyncOption } from "./AsyncOption";
+import { asyncResult, AsyncResult } from "./AsyncResult";
 import { list, List } from "./List";
 import { err, ok, Result } from "./Result";
 import { Seq, seq } from "./Seq";
+import { id } from "./utils";
 
 /**
  * A class that can represent the presence (`Some<A>`) or abscence (`None`) of a value.
@@ -684,6 +686,99 @@ export class Option<A> {
   }
 
   /**
+   * `traverseResult: (A -> Result<B, C>) -> Result<Option<B>, C>`
+   *
+   * ---
+   */
+  traverseResult<B, C>(fn: (a: A) => Result<B, C>): Result<Option<B>, C> {
+    if (this.isNone) {
+      return ok(none());
+    }
+
+    return fn(this.raw!).map(option);
+  }
+
+  /**
+   * `traverseAsync: (A -> Async<B>) -> Async<Option<B>>`
+   *
+   * ---
+   */
+  traverseAsync<B>(fn: (a: A) => Async<B>): Async<Option<B>> {
+    if (this.isNone) {
+      return async(none());
+    }
+
+    return fn(this.raw!).map(option);
+  }
+
+  /**
+   * `traversePromise: (A -> Promise<B>) -> Promise<Option<B>>`
+   *
+   * ---
+   */
+  traversePromise<B>(fn: (a: A) => Promise<B>): Promise<Option<B>> {
+    if (this.isNone) {
+      return Promise.resolve(none());
+    }
+
+    return fn(this.raw!).then(option);
+  }
+
+  /**
+   * `traverseResult: (A -> AsyncResult<B, C>) -> AsyncResult<Option<B>, C>`
+   *
+   * ---
+   */
+  traverseAsyncResult<B, C>(fn: (a: A) => AsyncResult<B, C>): AsyncResult<Option<B>, C>;
+  /**
+   * `traverseResult: (A -> Async<Result<B, C>>) -> AsyncResult<Option<B>, C>`
+   *
+   * ---
+   */
+  traverseAsyncResult<B, C>(fn: (a: A) => Async<Result<B, C>>): AsyncResult<Option<B>, C>;
+  /**
+   * `traverseResult: (A -> Promise<Result<B, C>>) -> AsyncResult<Option<B>, C>`
+   *
+   * ---
+   */
+  traverseAsyncResult<B, C>(fn: (a: A) => Promise<Result<B, C>>): AsyncResult<Option<B>, C>;
+  traverseAsyncResult<B, C>(
+    fn: (a: A) => AsyncResult<B, C> | Async<Result<B, C>> | Promise<Result<B, C>>
+  ): AsyncResult<Option<B>, C> {
+    if (this.isNone) {
+      return asyncResult(ok(none()));
+    }
+
+    return asyncResult(fn(this.raw!)).map(option);
+  }
+
+  /**
+   * `traverseList: (A -> List<B>) -> List<Option<B>>`
+   *
+   * ---
+   */
+  traverseList<B>(fn: (a: A) => List<B>): List<Option<B>> {
+    if (this.isNone) {
+      return list();
+    }
+
+    return fn(this.raw!).map(option);
+  }
+
+  /**
+   * `traverseArray: (A -> Array<B>) -> Array<Option<B>>`
+   *
+   * ---
+   */
+  traverseArray<B>(fn: (a: A) => B[]): Option<B>[] {
+    if (this.isNone) {
+      return [];
+    }
+
+    return fn(this.raw!).map(option);
+  }
+
+  /**
    * `value: Option<T> -> T`
    *
    * ---
@@ -1138,85 +1233,76 @@ export class Option<A> {
       o.toResult(error);
 
   /**
-   * `sequenceArray: Option<T>[] -> Option<T[]>`
+   * `sequenceArray: Option<T[]> -> Option<T>[]`
    *
    * ---
-   * @example
-   * const arr1 = [some(1), some(2), some(3)];
-   * const act1 = Option.sequenceArray(arr1);
-   * expect(act1.value).toEqual([1, 2, 3]);
-   *
-   * const arr2 = [some(1), none(), some(3)];
-   * const act2 = Option.sequenceArray(arr2);
-   * expect(act2.isNone).toBe(true);
    */
-  static sequenceArray = <T>(ts: Option<T>[]): Option<T[]> => {
-    let result = [];
-
-    for (const t of ts) {
-      if (t.isNone) {
-        return none();
-      }
-
-      result.push(t.toArray());
-    }
-
-    return some(result.flat());
-  };
+  static sequenceArray = <T>(ts: Option<T[]>): Option<T>[] => ts.traverseArray(id);
 
   /**
-   * `sequenceList: List<Option<T>> -> Option<List<T>>`
+   * `sequenceList: Option<List<T>> -> List<Option<T>>`
    *
    * ---
-   * @example
-   * const lst1 = list(some(1), some(2), some(3));
-   * const act1 = Option.sequenceList(lst1);
-   * expect(act1.value.toArray()).toEqual([1, 2, 3]);
-   *
-   * const lst2 = list(some(1), none(), some(3));
-   * const act2 = Option.sequenceList(lst2);
-   * expect(act2.isNone).toBe(true);
    */
-  static sequenceList = <T>(ts: List<Option<T>>): Option<List<T>> => {
-    let result = [];
-
-    for (const t of ts) {
-      if (t.isNone) {
-        return none();
-      }
-
-      result.push(t.toArray());
-    }
-
-    return some(list(...result.flat()));
-  };
+  static sequenceList = <T>(ts: Option<List<T>>): List<Option<T>> => ts.traverseList(id);
 
   /**
    * `sequenceSeq: Seq<Option<T>> -> Option<Seq<T>>`
    *
    * ---
-   * @example
-   * const sq1 = seq(some(1), some(2), some(3));
-   * const act1 = Option.sequenceSeq(sq1);
-   * expect(act1.value.toArray()).toEqual([1, 2, 3]);
-   *
-   * const sq2 = seq(some(1), none(), some(3));
-   * const act2 = Option.sequenceSeq(sq2);
-   * expect(act2.isNone).toBe(true);
    */
-  static sequenceSeq = <T>(ts: Seq<Option<T>>): Option<Seq<T>> => {
-    let result = [];
-
-    for (const t of ts.toList()) {
-      if (t.isNone) {
-        return none();
-      }
-
-      result.push(t.toArray());
+  static sequenceSeq = <T>(ts: Option<Seq<T>>): Seq<Option<T>> => {
+    if (ts.isNone) {
+      return seq();
     }
 
-    return some(Seq.ofArray(result.flat()));
+    return ts.raw!.map(option);
   };
+
+  /**
+   * `sequenceResult: Option<Result<A, B>> -> Result<Option<A>, B>`
+   *
+   * ---
+   */
+  static sequenceResult = <A, B>(optRes: Option<Result<A, B>>): Result<Option<A>, B> => optRes.traverseResult(id);
+
+  /**
+   * `sequenceResult: Option<AsyncResult<A, B>> -> AsyncResult<Option<A>, B>`
+   *
+   * ---
+   */
+  static sequenceAsyncResult<A, B>(optAsyncRes: Option<AsyncResult<A, B>>): AsyncResult<Option<A>, B>;
+  /**
+   * `sequenceResult: Option<Async<Result<A, B>>> -> AsyncResult<Option<A>, B>`
+   *
+   * ---
+   */
+  static sequenceAsyncResult<A, B>(optAsyncRes: Option<Async<Result<A, B>>>): AsyncResult<Option<A>, B>;
+  /**
+   * `sequenceResult: Option<Promise<Result<A, B>>> -> AsyncResult<Option<A>, B>`
+   *
+   * ---
+   */
+  static sequenceAsyncResult<A, B>(optAsyncRes: Option<Promise<Result<A, B>>>): AsyncResult<Option<A>, B>;
+  static sequenceAsyncResult<A, B>(
+    optAsyncRes: Option<AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>>
+  ): AsyncResult<Option<A>, B> {
+    return optAsyncRes.traverseAsyncResult(x => x as any);
+  }
+
+  /**
+   * `sequenceAsync: Option<Async<A>> -> Async<Option<A>>`
+   *
+   * ---
+   */
+  static sequenceAsync = <A>(optAsync: Option<Async<A>>): Async<Option<A>> => optAsync.traverseAsync(id);
+
+  /**
+   * `sequencePromise: Option<Promise<A>> -> Promise<Option<A>>`
+   *
+   * ---
+   */
+  static sequencePromise = <A>(optPromise: Option<Promise<A>>): Promise<Option<A>> => optPromise.traversePromise(id);
 
   static ce = <A, B>(genFn: () => Generator<Option<A>, B, A>): Option<B> => {
     const iterator = genFn();

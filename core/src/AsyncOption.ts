@@ -468,69 +468,6 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
   };
 
   /**
-   * `sequenceArray: AsyncOption<A>[] -> AsyncOption<A[]>`
-   *
-   * ---
-   */
-  static sequenceArray<A>(aos: AsyncOption<A>[]): AsyncOption<A[]>;
-  /**
-   * `sequenceArray: Async<Option<A>>[] -> AsyncOption<A[]>`
-   *
-   * ---
-   */
-  static sequenceArray<A>(aos: Async<Option<A>>[]): AsyncOption<A[]>;
-  /**
-   * `sequenceArray: Promise<Option<A>>[] -> AsyncOption<A[]>`
-   *
-   * ---
-   */
-  static sequenceArray<A>(aos: Promise<Option<A>>[]): AsyncOption<A[]>;
-  static sequenceArray<A>(aos: Array<AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>>): AsyncOption<A[]> {
-    const a = aos.map(x => normalize(x).raw);
-    const b = Async.sequenceArray(a).map(x => Option.sequenceArray(x));
-
-    return new AsyncOption(b);
-  }
-
-  /**
-   * `sequenceList: List<AsyncOption<A>> -> AsyncOption<List<A>>`
-   *
-   * ---
-   */
-  static sequenceList<A>(aos: List<AsyncOption<A>>): AsyncOption<List<A>>;
-  /**
-   * `sequenceList: List<Async<Option<A>>> -> AsyncOption<List<A>>`
-   *
-   * ---
-   */
-  static sequenceList<A>(aos: List<Async<Option<A>>>): AsyncOption<List<A>>;
-  /**
-   * `sequenceList: List<Promise<Option<A>>> -> AsyncOption<List<A>>`
-   *
-   * ---
-   */
-  static sequenceList<A>(aos: List<Promise<Option<A>>>): AsyncOption<List<A>>;
-  static sequenceList<A>(aos: List<AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>>): AsyncOption<List<A>> {
-    const a = aos.map(x => normalize(x).raw);
-    const b = Async.sequenceList(a).map(x => Option.sequenceList(x));
-
-    return new AsyncOption(b);
-  }
-
-  static sequenceResult<A, B>(rao: Result<AsyncOption<A>, B>): AsyncOption<Result<A, B>>;
-  static sequenceResult<A, B>(rao: Result<Async<Option<A>>, B>): AsyncOption<Result<A, B>>;
-  static sequenceResult<A, B>(rao: Result<Promise<Option<A>>, B>): AsyncOption<Result<A, B>>;
-  static sequenceResult<A, B>(
-    rao: Result<AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>, B>
-  ): AsyncOption<Result<A, B>> {
-    if (rao.isErr) {
-      return new AsyncOption(async(option(err(rao.err))));
-    }
-
-    return normalize(rao.raw as AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>).map(ok);
-  }
-
-  /**
    * Executes a `AsyncOption` Computation Expression.
    * @example
    * const a = AsyncOption.ce(function* () {

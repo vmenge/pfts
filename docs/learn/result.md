@@ -365,13 +365,13 @@ const errTup3 = d.zip(c);
 
 > You can also use `.zip3()` if you need to zip together 3 Options.
 
-## **::sequenceList()**
+## **List::sequenceResult()**
 
-`sequenceList: List<Result<A, B>> -> Result<List<A>, B>`
+`sequenceResult: List<Result<A, B>> -> Result<List<A>, B>`
 
 ---
 
-When given a list of Results, `Result.sequenceList` will return a `Result` with a `List` inside that is only `Ok` when
+When given a list of Results, `List.sequenceResult` will return a `Result` with a `List` inside that is only `Ok` when
 **every element** of the list was `Ok`. The first element that is an `Err` will be the `Err` returned by the function.
 
 > `List` is a type included in `pfts` that is essentially an immutable array with extra methods.
@@ -382,7 +382,7 @@ declare function parseNum(s: string): Result<number, string>;
 const numsOrErr = list("1", "2", "3").map(n => parseNum(n));
 // typeof numsOrErr is List<Result<number, string>>
 
-const nums = Result.sequenceList(optionalNums);
+const nums = List.sequenceResult(numsOrErr);
 // typeof nums is Result<List<number>, string>
 
 nums.value; // list(1, 2, 3);
@@ -390,14 +390,41 @@ nums.value; // list(1, 2, 3);
 const numsOrErr2 = list("1", "bla", "3").map(parseNum);
 // type of numsOrErr2 is List<Result<number, string>>
 
-const nums2 = Result.sequenceList(optionalNums2);
+const nums2 = List.sequenceResult(numsOrErr2);
 // typeof nums2 is Result<List<number>, string>
 
-nums.isOk; // false, since "bla" was an Err.
-num.err; // would probably return "bla is not a number" depending on what parseNum returns
+nums2.isOk; // false, since "bla" was an Err.
+nums2.err; // would probably return "bla is not a number" depending on what parseNum returns
 ```
 
-> There is also `Result.sequenceArray` available, which works the exact same way but with an `Array<Result<A, B>>`
+> There is also an overload that works with Arrays.
+
+## **List.traverseResult()**
+
+`this: List<A>`
+
+`traverseResult: (A -> Result<B, C>) -> Result<List<B>, C>`
+
+---
+
+Equivalent to calling `.map()` on a list with a function that returns a `Result` and then calling `List.sequenceResult`.
+
+```ts
+declare function parseNum(s: string): Result<number, string>;
+
+const nums = list("1", "2", "3").traverseResult(n => parseNum(n));
+// typeof nums is Result<List<number>, string>
+
+nums.value; // list(1, 2, 3);
+
+const nums2 = list("1", "bla", "3").traverseResult(parseNum);
+// typeof nums2 is Result<List<number>, string>
+
+nums2.isOk; // false, since "bla" was an Err.
+nums2.err; // would probably return "bla is not a number" depending on what parseNum returns
+```
+
+> There is also an overload that works with Arrays.
 
 ## **::hoard()**
 

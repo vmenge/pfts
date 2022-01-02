@@ -492,60 +492,6 @@ describe("Result", () => {
     });
   });
 
-  describe("::sequenceArray()", () => {
-    it("Sequences an Array of Ok Results", () => {
-      const arr = [ok(1), ok(2), ok(3)];
-      const k = Result.sequenceArray(arr);
-
-      expect(k).toBeInstanceOf(Result);
-      expect(k.raw).toEqual([1, 2, 3]);
-    });
-
-    it("Returns the first error in the Array", () => {
-      const arr = [ok(1), err("1"), err("2"), ok(2)];
-      const e = Result.sequenceArray(arr);
-
-      expect(e).toBeInstanceOf(Result);
-      expect(e.raw).toEqual("1");
-    });
-  });
-
-  describe("::sequenceList()", () => {
-    it("Sequences a List of Ok Results", () => {
-      const lst = list(ok(1), ok(2), ok(3));
-      const k = Result.sequenceList(lst);
-
-      expect(k).toBeInstanceOf(Result);
-      expect((k.raw as List<number>).toArray()).toEqual([1, 2, 3]);
-    });
-
-    it("Returns the first error in the List", () => {
-      const lst = list(ok(1), err("1"), err("2"), ok(2));
-      const e = Result.sequenceList(lst);
-
-      expect(e).toBeInstanceOf(Result);
-      expect(e.raw).toEqual("1");
-    });
-  });
-
-  describe("::sequenceSeq()", () => {
-    it("Sequences a Seq of Ok Results", () => {
-      const sq = seq(ok(1), ok(2), ok(3));
-      const k = Result.sequenceSeq(sq);
-
-      expect(k).toBeInstanceOf(Result);
-      expect((k.raw as Seq<number>).toArray()).toEqual([1, 2, 3]);
-    });
-
-    it("Returns the first error in the Seq", () => {
-      const sq = seq(ok(1), err("1"), err("2"), ok(2));
-      const e = Result.sequenceSeq(sq);
-
-      expect(e).toBeInstanceOf(Result);
-      expect(e.raw).toEqual("1");
-    });
-  });
-
   describe("::ce()", () => {
     it("Happy path works correctly", () => {
       const res = Result.ce(function* () {
