@@ -757,6 +757,8 @@ export class Result<A, B> {
   }
 
   /**
+   * `this: Result<A, B>`
+   *
    * `traverseOption: (A -> Option<C>) -> Option<Result<C, B>>`
    *
    * ---
@@ -770,6 +772,8 @@ export class Result<A, B> {
   }
 
   /**
+   * `this: Result<A, B>`
+   *
    * `traverseAsync: (A -> Async<C>) -> Async<Result<C, B>>`
    *
    * ---
@@ -783,6 +787,8 @@ export class Result<A, B> {
   }
 
   /**
+   * `this: Result<A, B>`
+   *
    * `traversePromise: (A -> Promise<C>) -> Promise<Result<C, B>>`
    *
    * ---
@@ -796,19 +802,25 @@ export class Result<A, B> {
   }
 
   /**
-   * `traverseAsyncOption: (A -> AsyncOption<C>) -> AsyncOption<C, B>`
+   * `this: Result<A, B>`
+   *
+   * `traverseAsyncOption: (A -> AsyncOption<C>) -> AsyncOption<Result<C, B>>`
    *
    * ---
    */
   traverseAsyncOption<C>(fn: (a: A) => AsyncOption<C>): AsyncOption<Result<C, B>>;
   /**
-   * `traverseAsyncOption: (A -> Async<Option<C>>) -> AsyncOption<C, B>`
+   * `this: Result<A, B>`
+   *
+   * `traverseAsyncOption: (A -> Async<Option<C>>) -> AsyncOption<Result<C, B>>`
    *
    * ---
    */
   traverseAsyncOption<C>(fn: (a: A) => Async<Option<C>>): AsyncOption<Result<C, B>>;
   /**
-   * `traverseAsyncOption: (A -> Promise<Option<C>>) -> AsyncOption<C, B>`
+   * `this: Result<A, B>`
+   *
+   * `traverseAsyncOption: (A -> Promise<Option<C>>) -> AsyncOption<Result<C, B>>`
    *
    * ---
    */
@@ -824,6 +836,8 @@ export class Result<A, B> {
   }
 
   /**
+   * `this: Result<A, B>`
+   *
    * `traverseList: (A -> List<C>) -> List<Result<C, B>>`
    *
    * ---
@@ -837,6 +851,8 @@ export class Result<A, B> {
   }
 
   /**
+   * `this: Result<A, B>`
+   *
    * `traverseArray: (A -> Array<C>) -> Array<Result<C, B>>`
    *
    * ---

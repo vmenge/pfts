@@ -2,9 +2,10 @@ import { none, option, Option, some } from "./Option";
 import { add, greaterThan, id, lessThan, not, subt } from "./utils";
 import { err, ok, Result } from "./Result";
 import { Dict } from "./Dict";
-import { AsyncOption } from "./AsyncOption";
+import { asyncOption, AsyncOption } from "./AsyncOption";
 import { async, Async } from "./Async";
 import { Seq } from "./Seq";
+import { asyncResult, AsyncResult } from "./AsyncResult";
 
 /**
  * A zero-indexed immutable collection of elements.
@@ -1417,7 +1418,9 @@ export class List<A> {
   }
 
   /**
-   * `traverseOption: (A -> Option<B>) -> Option<List<B>`
+   * `this: List<A>`
+   *
+   * `traverseOption: (A -> Option<B>) -> Option<List<B>>`
    *
    * ---
    */
@@ -1436,6 +1439,36 @@ export class List<A> {
   }
 
   /**
+   * `this: List<A>`
+   *
+   * `traverseAsyncOption: (A -> AsyncOption<B>) -> AsyncOption<List<B>>`
+   *
+   * ---
+   */
+  traverseAsyncOption<B>(fn: (a: A) => AsyncOption<B>): AsyncOption<List<B>>;
+  /**
+   * `this: List<A>`
+   *
+   * `traverseAsyncOption: (A -> Async<Option<B>>) -> AsyncOption<List<B>>`
+   *
+   * ---
+   */
+  traverseAsyncOption<B>(fn: (a: A) => Async<Option<B>>): AsyncOption<List<B>>;
+  /**
+   * `this: List<A>`
+   *
+   * `traverseAsyncOption: (A -> Promise<Option<B>>) -> AsyncOption<List<B>>`
+   *
+   * ---
+   */
+  traverseAsyncOption<B>(fn: (a: A) => Promise<Option<B>>): AsyncOption<List<B>>;
+  traverseAsyncOption<B>(fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>): AsyncOption<List<B>> {
+    return asyncOption(Promise.all(this.map(fn)).then(x => List.sequenceOption(x))).map(List.ofArray);
+  }
+
+  /**
+   * `this: List<A>`
+   *
    * `traverseResult: (A -> Result<B, C>) -> Result<List<B>, C>`
    *
    * ---
@@ -1455,7 +1488,39 @@ export class List<A> {
   }
 
   /**
-   * `traverseAsync: (A -> Async<B>) -> Async<List<B>`
+   * `this: List<A>`
+   *
+   * `traverseAsyncResult: (A -> AsyncResult<B, C>) -> AsyncResult<List<B>, C>`
+   *
+   * ---
+   */
+  traverseAsyncResult<B, C>(fn: (a: A) => AsyncResult<B, C>): AsyncResult<List<B>, C>;
+  /**
+   * `this: List<A>`
+   *
+   * `traverseAsyncResult: (A -> Async<Result<B, C>>) -> AsyncResult<List<B>, C>`
+   *
+   * ---
+   */
+  traverseAsyncResult<B, C>(fn: (a: A) => Async<Result<B, C>>): AsyncResult<List<B>, C>;
+  /**
+   * `this: List<A>`
+   *
+   * `traverseAsyncResult: (A -> Promise<Result<B, C>>) -> AsyncResult<List<B>, C>`
+   *
+   * ---
+   */
+  traverseAsyncResult<B, C>(fn: (a: A) => Promise<Result<B, C>>): AsyncResult<List<B>, C>;
+  traverseAsyncResult<B, C>(
+    fn: (a: A) => AsyncResult<B, C> | Async<Result<B, C>> | Promise<Result<B, C>>
+  ): AsyncResult<List<B>, C> {
+    return asyncResult(Promise.all(this.map(fn)).then(x => List.sequenceResult(x))).map(List.ofArray);
+  }
+
+  /**
+   * `this: List<A>`
+   *
+   * `traverseAsync: (A -> Async<B>) -> Async<List<B>>`
    *
    * ---
    */
@@ -1466,7 +1531,9 @@ export class List<A> {
   }
 
   /**
-   * `traversePromise: (A -> Promise<B>) -> Promise<List<B>`
+   * `this: List<A>`
+   *
+   * `traversePromise: (A -> Promise<B>) -> Promise<List<B>>`
    *
    * ---
    */
