@@ -234,6 +234,18 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
     return fn(this);
   }
 
+  /**
+   * `this: AsyncResult<A, B>`
+   *
+   * `ignore: () -> AsyncResult<void, B>`
+   *
+   * ---
+   * Ignores the contents of the `AsyncResult`.
+   */
+  ignore(): AsyncResult<void, B> {
+    return this.map(() => {});
+  }
+
   static isOk = <A, B>(ar: AsyncResult<A, B> | Async<Result<A, B>>): Async<boolean> => normalize(ar).isOk;
 
   static isErr = <A, B>(ar: AsyncResult<A, B>): Async<boolean> => normalize(ar).isErr;
@@ -297,6 +309,14 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
 
     return new AsyncResult(y);
   }
+
+  /**
+   * `ignore: AsyncResult<A, B> -> AsyncResult<void, B>`
+   *
+   * ---
+   * Ignores the contents of the `AsyncResult`.
+   */
+  static ignore = <A, B>(res: AsyncResult<A, B>): AsyncResult<void, B> => res.ignore();
 }
 
 export const asyncResult = <T, B = never>(

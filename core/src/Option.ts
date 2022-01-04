@@ -795,6 +795,18 @@ export class Option<A> {
   }
 
   /**
+   * `this: Option<A>`
+   *
+   * `ignore: () -> Option<void>`
+   *
+   * ---
+   * Ignores the contents of the `Option`.
+   */
+  ignore(): Option<void> {
+    return this.map(() => {});
+  }
+
+  /**
    * `value: Option<T> -> T`
    *
    * ---
@@ -1319,6 +1331,14 @@ export class Option<A> {
    * ---
    */
   static sequencePromise = <A>(optPromise: Option<Promise<A>>): Promise<Option<A>> => optPromise.traversePromise(id);
+
+  /**
+   * `ignore: Option<A> -> Option<void>`
+   *
+   * ---
+   * Ignores the contents of the `Option`.
+   */
+  static ignore = <A>(o: Option<A>): Option<void> => o.ignore();
 
   static ce = <A, B>(genFn: () => Generator<Option<A>, B, A>): Option<B> => {
     const iterator = genFn();

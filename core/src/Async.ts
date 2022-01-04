@@ -282,6 +282,18 @@ export class Async<A> implements PromiseLike<A> {
   }
 
   /**
+   * `this: Async<A>`
+   *
+   * `ignore: () -> Async<void>`
+   *
+   * ---
+   * Ignores the contents of the `Async`.
+   */
+  ignore(): Async<void> {
+    return this.map(() => {});
+  }
+
+  /**
    * `normalize: (Async<A> | Promise<A>) -> Async<A>`
    *
    * ---
@@ -386,6 +398,14 @@ export class Async<A> implements PromiseLike<A> {
   };
 
   static run = <A>(fn: () => Promise<A>): Async<A> => async(fn());
+
+  /**
+   * `ignore: Async<A> -> Async<void>`
+   *
+   * ---
+   * Ignores the contents of the `Async`.
+   */
+  static ignore = <A>(a: Async<A>): Async<void> => a.ignore();
 }
 
 /**

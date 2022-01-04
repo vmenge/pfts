@@ -866,6 +866,18 @@ export class Result<A, B> {
   }
 
   /**
+   * `this: Result<A, B>`
+   *
+   * `ignore: () -> Result<void, B>`
+   *
+   * ---
+   * Ignores the contents of the `Result`.
+   */
+  ignore(): Result<void, B> {
+    return this.map(() => {});
+  }
+
+  /**
    * `sequenceOption: Result<Option<A>, B> -> Option<Result<A, B>>`
    *
    * ---
@@ -1247,6 +1259,14 @@ export class Result<A, B> {
 
     return err(errEntries.map(([_, val]) => val.raw));
   };
+
+  /**
+   * `ignore: Result<A, B> -> Result<void, B>`
+   *
+   * ---
+   * Ignores the contents of the `Result`.
+   */
+  static ignore = <A, B>(res: Result<A, B>): Result<void, B> => res.ignore();
 }
 
 /**

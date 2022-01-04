@@ -435,6 +435,18 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
     return fn(this);
   }
 
+  /**
+   * `this: AsyncOption<A>`
+   *
+   * `ignore: () -> AsyncOption<void>`
+   *
+   * ---
+   * Ignores the contents of the `AsyncOption`.
+   */
+  ignore(): AsyncOption<void> {
+    return this.map(() => {});
+  }
+
   static isSome = <A>(ao: AsyncOption<A> | Async<Option<A>>): Async<boolean> => normalize(ao).isSome;
 
   static isNone = <A>(ao: AsyncOption<A>): Async<boolean> => normalize(ao).isNone;
@@ -520,6 +532,14 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
 
     return new AsyncOption(y);
   }
+
+  /**
+   * `ignore: AsyncOption<A> -> AsyncOption<void>`
+   *
+   * ---
+   * Ignores the contents of the `AsyncOption`.
+   */
+  static ignore = <A>(o: AsyncOption<A>): AsyncOption<void> => o.ignore();
 }
 
 /**
