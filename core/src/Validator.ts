@@ -50,6 +50,21 @@ export class Validator<A> {
   static boolean = Validator.new(n => (typeof n === "boolean" ? ok(n) : vErr(exp("boolean", n))));
   static string = Validator.new(n => (typeof n === "string" ? ok(n) : vErr(exp("string", n))));
 
+  /**
+   * A string discriminated union validator.
+   * @example
+   */
+  static du<T extends readonly string[]>(...cases: T): Validator<T[number]> {
+    return Validator.new(n => {
+      if (typeof n !== "string" || !cases.includes(n)) {
+        const expected = cases.join(" | ");
+        return vErr(exp(expected, n));
+      }
+
+      return ok(n) as any;
+    });
+  }
+
   static array<T extends any>(v: Validator<T>): Validator<T[]> {
     const isArray = (n: unknown): Result<any[], string[]> => (Array.isArray(n) ? ok(n) : vErr(exp("array", n)));
 
