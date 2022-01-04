@@ -1,6 +1,6 @@
 import { Validator, ValidatorType } from "@pfts/core/src";
 
-const { string, number, boolean, array, tuple, obj, du } = Validator;
+const { string, number, boolean, date, array, tuple, obj, du } = Validator;
 
 describe("Validator", () => {
   describe("Primitives", () => {
@@ -17,6 +17,14 @@ describe("Validator", () => {
     it("boolean", () => {
       const res = boolean.validate(true);
       expect(res.raw).toEqual(true);
+    });
+
+    it("date", () => {
+      const errRes = date.validate("bleble");
+      expect((errRes.raw as string[]).length).toEqual(1);
+
+      const okRes = date.validate("2022-01-04T16:01:47+00:00");
+      expect(okRes.raw).toBeInstanceOf(Date);
     });
   });
 

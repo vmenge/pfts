@@ -50,6 +50,16 @@ export class Validator<A> {
   static boolean = Validator.new(n => (typeof n === "boolean" ? ok(n) : vErr(exp("boolean", n))));
   static string = Validator.new(n => (typeof n === "string" ? ok(n) : vErr(exp("string", n))));
 
+  static date = Validator.new(n => {
+    if (typeof n === "string") {
+      const date = new Date(n);
+
+      return Number.isNaN(Number(date)) ? vErr(`could not parse date string with value: ${n}`) : ok(date);
+    }
+
+    return vErr(exp("date string", n));
+  });
+
   /**
    * A string discriminated union validator.
    * @example
