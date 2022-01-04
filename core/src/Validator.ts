@@ -169,13 +169,18 @@ export class Validator<A> {
     return result;
   };
 
-  validateResponse = (res: Response, type: "text" | "json" = "json"): AsyncResult<A, string[]> => {
-    const fn = type === "text" ? res.text : res.json;
+  validateResponse = (res: Response, type: "text" | "json" = "json"): AsyncResult<A, string[]> =>
+    AsyncResult.run(async () => {
+      if (type === "text") {
+        return res
+          .text()
+          .then(this.validate)
+          .catch(e => Promise.resolve(err([e instanceof Error ? e.message : "Uknown error."])));
+      }
 
-    return AsyncResult.run(() =>
-      fn()
+      return res
+        .json()
         .then(this.validate)
-        .catch(e => Promise.resolve(err([e instanceof Error ? e.message : "Uknown error."])))
-    );
-  };
+        .catch(e => Promise.resolve(err([e instanceof Error ? e.message : "Uknown error."])));
+    });
 }
