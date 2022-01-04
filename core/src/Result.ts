@@ -576,12 +576,12 @@ export class Result<A, B> {
    * const y = err("oops").defaultWith(() => 60);
    * expect(y).toEqual(60);
    */
-  defaultWith(fn: () => A): A {
+  defaultWith(fn: (b: B) => A): A {
     if (this.isOk) {
       return this._val as A;
     }
 
-    return fn();
+    return fn(this._val as B);
   }
 
   /**

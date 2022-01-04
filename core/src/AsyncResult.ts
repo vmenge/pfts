@@ -160,19 +160,19 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
     return this.rawAsync.map(x => x.defaultValue(a));
   }
 
-  defaultWith(fn: () => A): Async<A> {
+  defaultWith(fn: (b: B) => A): Async<A> {
     return this.rawAsync.map(x => x.defaultWith(fn));
   }
 
-  defaultWithAsync(fn: () => Async<A>): Async<A>;
-  defaultWithAsync(fn: () => Promise<A>): Async<A>;
-  defaultWithAsync(fn: () => Async<A> | Promise<A>): Async<A> {
+  defaultWithAsync(fn: (b: B) => Async<A>): Async<A>;
+  defaultWithAsync(fn: (b: B) => Promise<A>): Async<A>;
+  defaultWithAsync(fn: (b: B) => Async<A> | Promise<A>): Async<A> {
     return this.rawAsync.bind(x => {
       if (x.isOk) {
-        return async(x.value);
+        return async(x.raw as A);
       }
 
-      return Async.normalize(fn());
+      return Async.normalize(fn(x.raw as B));
     });
   }
 
