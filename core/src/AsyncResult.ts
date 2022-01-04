@@ -43,7 +43,7 @@ const normalize = <T, B = never>(
 };
 
 export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
-  constructor(private readonly raw: Async<Result<A, B>>) {}
+  constructor(private readonly rawAsync: Async<Result<A, B>>) {}
 
   static ofAsync<A, B>(ar: Async<Result<A, B>>): AsyncResult<A, B> {
     return new AsyncResult(ar);
@@ -61,7 +61,7 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
     onfulfilled?: ((value: Result<A, B>) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
   ): PromiseLike<TResult1 | TResult2> {
-    return this.raw.then(onfulfilled, onrejected);
+    return this.rawAsync.then(onfulfilled, onrejected);
   }
 
   *[Symbol.iterator](): Generator<AsyncResult<A, B>, A, any> {
@@ -69,15 +69,19 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   }
 
   get isOk(): Async<boolean> {
-    return this.raw.map(r => r.isOk);
+    return this.rawAsync.map(r => r.isOk);
   }
 
   get isErr(): Async<boolean> {
-    return this.raw.map(o => o.isErr);
+    return this.rawAsync.map(o => o.isErr);
   }
 
   get value(): Async<A> {
-    return this.raw.map(r => r.value);
+    return this.rawAsync.map(r => r.value);
+  }
+
+  get raw(): Async<A | B> {
+    return this.rawAsync.map(r => r.raw);
   }
 
   /**
@@ -85,30 +89,30 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
    * @throws an Error if the `AsyncResult<A, B>` is `Ok`.
    */
   get err(): Async<B> {
-    return this.raw.map(r => r.err);
+    return this.rawAsync.map(r => r.err);
   }
 
   toAsync(): Async<Result<A, B>> {
-    return this.raw;
+    return this.rawAsync;
   }
 
   toPromise(): Promise<Result<A, B>> {
-    return this.raw.promise;
+    return this.rawAsync.promise;
   }
 
   map<C>(fn: (a: A) => C): AsyncResult<C, B> {
-    return new AsyncResult(this.raw.map(r => r.map(fn)));
+    return new AsyncResult(this.rawAsync.map(r => r.map(fn)));
   }
 
   bind<C>(fn: (a: A) => AsyncResult<C, B>): AsyncResult<C, B>;
   bind<C>(fn: (a: A) => Async<Result<C, B>>): AsyncResult<C, B>;
   bind<C>(fn: (a: A) => Promise<Result<C, B>>): AsyncResult<C, B>;
   bind<C>(fn: (a: A) => AsyncResult<C, B> | Async<Result<C, B>> | Promise<Result<C, B>>): AsyncResult<C, B> {
-    const res = this.raw.bind(v => {
+    const res = this.rawAsync.bind(v => {
       const result = v.map(fn);
 
       if (result.isOk) {
-        return normalize(result.value).raw;
+        return normalize(result.value).rawAsync;
       }
 
       return result as any as Async<Result<C, B>>;
@@ -130,19 +134,19 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   }
 
   match<C>(someFn: (a: A) => C, errFn: (b: B) => C): Async<C> {
-    return this.raw.map(x => x.match(someFn, errFn));
+    return this.rawAsync.map(x => x.match(someFn, errFn));
   }
 
   matchAsync<C>(someFn: (a: A) => Async<C>, errFn: (b: B) => Async<C>): Async<C> {
-    return this.raw.bind(x => x.match(someFn, errFn));
+    return this.rawAsync.bind(x => x.match(someFn, errFn));
   }
 
   iter(fn: (a: A) => void): Async<void> {
-    return async(this.raw.promise.then(x => x.iter(fn)));
+    return async(this.rawAsync.promise.then(x => x.iter(fn)));
   }
 
   mapErr<C>(fn: (b: B) => C): AsyncResult<A, C> {
-    return normalize(this.raw.map(x => x.mapErr(fn)));
+    return normalize(this.rawAsync.map(x => x.mapErr(fn)));
   }
 
   tee(fn: (a: A) => void): AsyncResult<A, B> {
@@ -153,17 +157,17 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   }
 
   defaultValue(a: A): Async<A> {
-    return this.raw.map(x => x.defaultValue(a));
+    return this.rawAsync.map(x => x.defaultValue(a));
   }
 
   defaultWith(fn: () => A): Async<A> {
-    return this.raw.map(x => x.defaultWith(fn));
+    return this.rawAsync.map(x => x.defaultWith(fn));
   }
 
   defaultWithAsync(fn: () => Async<A>): Async<A>;
   defaultWithAsync(fn: () => Promise<A>): Async<A>;
   defaultWithAsync(fn: () => Async<A> | Promise<A>): Async<A> {
-    return this.raw.bind(x => {
+    return this.rawAsync.bind(x => {
       if (x.isOk) {
         return async(x.value);
       }
@@ -173,18 +177,18 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   }
 
   orElse(r: Result<A, B>): AsyncResult<A, B> {
-    return normalize(this.raw.map(x => x.orElse(r)));
+    return normalize(this.rawAsync.map(x => x.orElse(r)));
   }
 
   orElseWith(fn: () => Result<A, B>): AsyncResult<A, B> {
-    return normalize(this.raw.map(x => x.orElseWith(fn)));
+    return normalize(this.rawAsync.map(x => x.orElseWith(fn)));
   }
 
   orElseWithAsync(fn: () => AsyncResult<A, B>): AsyncResult<A, B>;
   orElseWithAsync(fn: () => Async<Result<A, B>>): AsyncResult<A, B>;
   orElseWithAsync(fn: () => Promise<Result<A, B>>): AsyncResult<A, B>;
   orElseWithAsync(fn: () => AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): AsyncResult<A, B> {
-    const res = this.raw.bind(x => {
+    const res = this.rawAsync.bind(x => {
       if (x.isOk) {
         return async(x);
       }
@@ -196,7 +200,7 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
   }
 
   toAsyncOption(): AsyncOption<A> {
-    return new AsyncOption(this.raw.map(x => x.toOption()));
+    return new AsyncOption(this.rawAsync.map(x => x.toOption()));
   }
 
   zip<C>(b: AsyncResult<C, B>): AsyncResult<[A, C], B>;
@@ -258,7 +262,7 @@ export class AsyncResult<A, B> implements PromiseLike<Result<A, B>> {
       normalize(x).iter(fn);
 
   static toAsyncOption = <A, B>(ar: AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>): AsyncOption<A> =>
-    new AsyncOption(normalize(ar).raw.map(x => x.toOption()));
+    new AsyncOption(normalize(ar).rawAsync.map(x => x.toOption()));
 
   static ofAsyncOption =
     <B>(err: B) =>

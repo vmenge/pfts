@@ -43,7 +43,7 @@ const normalize = <T>(
 };
 
 export class AsyncOption<A> implements PromiseLike<Option<A>> {
-  constructor(private readonly raw: Async<Option<A>>) {}
+  constructor(private readonly rawAsync: Async<Option<A>>) {}
 
   /**
    * `ofAsync: Async<Option<A>> -> AsyncOption<A>`
@@ -92,7 +92,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
     onfulfilled?: ((value: Option<A>) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
   ): Async<TResult1 | TResult2> {
-    return this.raw.then(onfulfilled, onrejected);
+    return this.rawAsync.then(onfulfilled, onrejected);
   }
 
   *[Symbol.iterator](): Generator<AsyncOption<A>, A, any> {
@@ -103,14 +103,14 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * Returns `true` if the `Option` inside this `AsyncOption` is `Some`.
    */
   get isSome(): Async<boolean> {
-    return this.raw.map(o => o.isSome);
+    return this.rawAsync.map(o => o.isSome);
   }
 
   /**
    * Returns `true` if the `Option` inside this `AsyncOption` is `None`.
    */
   get isNone(): Async<boolean> {
-    return this.raw.map(o => o.isNone);
+    return this.rawAsync.map(o => o.isNone);
   }
 
   /**
@@ -118,7 +118,11 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * Throws an `Error` if it is `None`.
    */
   get value(): Async<A> {
-    return this.raw.map(o => o.value);
+    return this.rawAsync.map(o => o.value);
+  }
+
+  get raw(): Async<A | undefined> {
+    return this.rawAsync.map(o => o.raw);
   }
 
   /**
@@ -129,7 +133,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   toAsync(): Async<Option<A>> {
-    return this.raw;
+    return this.rawAsync;
   }
 
   /**
@@ -140,7 +144,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   toPromise(): Promise<Option<A>> {
-    return this.raw.promise;
+    return this.rawAsync.promise;
   }
 
   /**
@@ -151,7 +155,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   map<B>(fn: (a: A) => B): AsyncOption<B> {
-    return new AsyncOption(this.raw.map(o => o.map(fn)));
+    return new AsyncOption(this.rawAsync.map(o => o.map(fn)));
   }
 
   /**
@@ -179,11 +183,11 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    */
   bind<B>(fn: (a: A) => Promise<Option<B>>): AsyncOption<B>;
   bind<B>(fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>): AsyncOption<B> {
-    const res = this.raw.bind(v => {
+    const res = this.rawAsync.bind(v => {
       const result = v.map(fn);
 
       if (result.isSome) {
-        return normalize(result.value).raw;
+        return normalize(result.value).rawAsync;
       }
 
       return async(none()) as Async<Option<B>>;
@@ -223,11 +227,11 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
   }
 
   match<B>(someFn: (a: A) => B, noneFn: () => B): Async<B> {
-    return this.raw.map(x => x.match(someFn, noneFn));
+    return this.rawAsync.map(x => x.match(someFn, noneFn));
   }
 
   matchAsync<B>(someFn: (a: A) => Async<B>, noneFn: () => Async<B>): Async<B> {
-    return this.raw.bind(x => x.match(someFn, noneFn));
+    return this.rawAsync.bind(x => x.match(someFn, noneFn));
   }
 
   /**
@@ -238,7 +242,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   iter(fn: (a: A) => void): Async<void> {
-    return async(this.raw.promise.then(x => x.iter(fn)));
+    return async(this.rawAsync.promise.then(x => x.iter(fn)));
   }
 
   /**
@@ -263,7 +267,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   defaultValue(a: A): Async<A> {
-    return this.raw.map(x => x.defaultValue(a));
+    return this.rawAsync.map(x => x.defaultValue(a));
   }
 
   /**
@@ -274,7 +278,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   defaultWith(fn: () => A): Async<A> {
-    return this.raw.map(x => x.defaultWith(fn));
+    return this.rawAsync.map(x => x.defaultWith(fn));
   }
 
   /**
@@ -294,7 +298,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    */
   defaultWithAsync(fn: () => Promise<A>): Async<A>;
   defaultWithAsync(fn: () => Async<A> | Promise<A>): Async<A> {
-    return this.raw.bind(x => {
+    return this.rawAsync.bind(x => {
       if (x.isSome) {
         return async(x.raw!);
       }
@@ -311,7 +315,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   orElse(a: Option<A>): AsyncOption<A> {
-    return new AsyncOption(this.raw.map(x => x.orElse(a)));
+    return new AsyncOption(this.rawAsync.map(x => x.orElse(a)));
   }
 
   /**
@@ -322,7 +326,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   orElseWith(fn: () => Option<A>): AsyncOption<A> {
-    return new AsyncOption(this.raw.map(x => x.orElseWith(fn)));
+    return new AsyncOption(this.rawAsync.map(x => x.orElseWith(fn)));
   }
 
   /**
@@ -350,7 +354,7 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    */
   orElseWithAsync(fn: () => Promise<Option<A>>): AsyncOption<A>;
   orElseWithAsync(fn: () => AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>): AsyncOption<A> {
-    const res = this.raw.bind(x => {
+    const res = this.rawAsync.bind(x => {
       if (x.isSome) {
         return async(x);
       }
