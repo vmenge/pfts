@@ -5,7 +5,11 @@ import { err, ok, Result } from "./Result";
 import { PickOpt, PickReq, Merge } from "./type-utils";
 
 type NestedValidator<A extends Validator<A>> = A extends Validator<infer B> ? B : never;
-export type ValidatorType<T extends Validator<any>> = Merge<PickReq<NestedValidator<T>>, PickOpt<NestedValidator<T>>>;
+export type ValidatorType<T extends Validator<any>> = NestedValidator<T>;
+export type ValidatorOptType<T extends Validator<any>> = Merge<
+  PickReq<NestedValidator<T>>,
+  PickOpt<NestedValidator<T>>
+>;
 
 type ValidatorOptions = {
   isObj: boolean;

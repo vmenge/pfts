@@ -86,22 +86,22 @@ export abstract class NewType<Name extends string, T> {
   }
 }
 
-type Optional<T> = Exclude<T, NonNullable<T>>;
+type IsOptional<T> = Exclude<T, NonNullable<T>> extends never ? false : true;
 
 type OptKeys<T> = {
-  [K in keyof T]-?: Optional<T[K]> extends never ? never : K;
+  [K in keyof T]-?: IsOptional<T[K]> extends false ? never : K;
 }[keyof T];
 
 type ReqKeys<T> = {
-  [K in keyof T]-?: Optional<T[K]> extends never ? K : never;
+  [K in keyof T]-?: IsOptional<T[K]> extends false ? K : never;
 }[keyof T];
 
 export type PickOpt<T> = {
-  [K in OptKeys<T>]+?: Optional<T[K]> extends never ? never : T[K];
+  [K in OptKeys<T>]+?: IsOptional<T[K]> extends false ? never : T[K];
 };
 
 export type PickReq<T> = {
-  [K in ReqKeys<T>]-?: Optional<T[K]> extends never ? T[K] : never;
+  [K in ReqKeys<T>]-?: IsOptional<T[K]> extends false ? T[K] : never;
 };
 
 export type Merge<A, B, C = A & B> = {
