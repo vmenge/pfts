@@ -506,6 +506,20 @@ export class Dict<A, B> {
     return fn(this);
   }
 
+  toJSON() {
+    let obj: Record<string, B> = {};
+
+    for (const [key, val] of this._values) {
+      obj[`${key}`] = val;
+    }
+
+    return obj;
+  }
+
+  toString() {
+    return JSON.stringify(this.toJSON(), undefined, 2);
+  }
+
   static rejectNones<A, B>(dict: Dict<A, Option<B>>): Dict<A, B> {
     return dict.choose((_, v) => v);
   }
