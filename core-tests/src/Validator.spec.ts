@@ -1,6 +1,6 @@
 import { Validator, ValidatorType } from "@pfts/core/src";
 
-const { string, number, boolean, date, array, tuple, obj, du } = Validator;
+const { string, number, boolean, date, array, tuple, obj, du, record } = Validator;
 
 describe("Validator", () => {
   describe("Primitives", () => {
@@ -103,6 +103,28 @@ describe("Validator", () => {
 
       const actual = o.validate(expected);
       expect(actual.raw).toEqual(expected);
+    });
+
+    it("record", () => {
+      const rcrd = record(number);
+
+      const expected: ValidatorType<typeof rcrd> = {
+        one: 1,
+        two: 2,
+        three: 3,
+      };
+
+      const actual = rcrd.validate(expected);
+      expect(actual.raw).toEqual(expected);
+
+      const expectedErr = {
+        one: 1,
+        2: 2,
+        3: 3,
+      };
+
+      const actualErr = rcrd.validate(expectedErr);
+      console.log(actualErr.raw);
     });
   });
 });

@@ -39,7 +39,7 @@ const actualType = (a: any): string => {
 };
 
 const exp = (expected: string, actual: any): string =>
-  `expected: '${expected}', got: '${actualType(actual)}' with value: ${actual}`;
+  `expected: '${expected}', got: '${actualType(actual)}' with value: '${actual}'`;
 
 export class Validator<A> {
   private constructor(
@@ -80,7 +80,28 @@ export class Validator<A> {
     });
   }
 
-  static array<T extends any>(v: Validator<T>): Validator<T[]> {
+  static record<T>(values: Validator<T>): Validator<Record<string, T>> {
+    return new Validator(n => {
+      if (typeof n !== "object" || Array.isArray(n) || n === null) {
+        return vErr(exp("object", n));
+      }
+
+      const errs = Object.entries(n).flatMap(([key, val]) =>
+        values
+          .validate(val)
+          .errToArray()
+          .flatMap(errs => errs.map(err => `<${key}> - ${err}`))
+      );
+
+      if (errs.length > 0) {
+        return err(errs);
+      }
+
+      return ok(n) as any;
+    });
+  }
+
+  static array<T>(v: Validator<T>): Validator<T[]> {
     const isArray = (n: unknown): Result<any[], string[]> => (Array.isArray(n) ? ok(n) : vErr(exp("array", n)));
 
     return new Validator(
