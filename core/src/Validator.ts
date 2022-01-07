@@ -72,7 +72,7 @@ export class Validator<A> {
   static du<T extends readonly string[]>(...cases: T): Validator<T[number]> {
     return Validator.new(n => {
       if (typeof n !== "string" || !cases.includes(n)) {
-        const expected = cases.join(" | ");
+        const expected = cases.map(x => `'${x}'`).join(" | ");
         return vErr(exp(expected, n));
       }
 
