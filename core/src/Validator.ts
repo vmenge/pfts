@@ -150,7 +150,9 @@ export class Validator<A> {
           const r = val.validate(obj[key]);
 
           if (r.isOk) {
-            res[key] = r.raw;
+            if (r.raw !== undefined) {
+              res[key] = r.raw;
+            }
           } else {
             (r.raw as string[]).forEach(e => {
               const msg = val.opt.isObj && e.startsWith("[") ? e.replace("[", `[${key}.`) : `[${key}]: ${e}`;
