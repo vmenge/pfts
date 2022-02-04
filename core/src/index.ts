@@ -12,3 +12,4 @@ export * from "./pipe";
 export * from "./utils";
 export * from "./type-utils";
 export * from "./Validator";
+export * from "./Writer";

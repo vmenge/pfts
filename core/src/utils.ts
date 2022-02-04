@@ -22,5 +22,7 @@ export const subt = (x: number) => (y: number) => x - y;
 export const mult = (x: number) => (y: number) => x * y;
 export const div = (x: number) => (y: number) => x / y;
 export const mod = (x: number) => (y: number) => x % y;
-export const unit = (() => {})();
 export const id = <T>(t: T): T => t;
+
+export type unit = void;
+export const unit = (() => {})();
