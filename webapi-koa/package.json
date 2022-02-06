@@ -1,6 +1,6 @@
 {
   "name": "@pfts/webapi-koa",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "author": {
     "name": "Victor Ferreira Menge",
@@ -19,9 +19,16 @@
   ],
   "types": "dist/index.d.ts",
   "dependencies": {
-    "koa": "^2.13.4"
+    "koa": "^2.13.4",
+    "path-to-regexp": "^6.2.0"
   },
   "devDependencies": {
-    "@types/koa": "^2.13.4"
+    "@types/jest": "^27.0.2",
+    "@types/koa": "^2.13.4",
+    "@types/supertest": "^2.0.11",
+    "jest": "^27.3.1",
+    "supertest": "^6.2.2",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.4.4"
   }
 }
