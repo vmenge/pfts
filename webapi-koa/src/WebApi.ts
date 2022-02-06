@@ -1,4 +1,5 @@
 import Koa from "koa";
+import { IncomingHttpHeaders } from "http";
 import { pathToRegexp, match, Key } from "path-to-regexp";
 
 export type HttpRequest = {
@@ -7,25 +8,20 @@ export type HttpRequest = {
   params: Record<string, string>;
   query: Record<string, string[] | string | undefined>;
   method: string;
-  headers: Record<string, string[] | string>;
+  headers: IncomingHttpHeaders;
   body?: any;
   ip: string;
 };
 
 export const HttpRequest = {
   ofKoaRequest(req: Koa.Request, params: Record<string, string>): HttpRequest {
-    const headers = Object.entries(req.headers).reduce(
-      (obj, [key, val]) => ({ ...obj, [key]: val }),
-      {}
-    );
-
     return {
       url: req.URL.toString(),
       path: req.path,
       params: params,
       query: req.query,
       method: req.method,
-      headers,
+      headers: req.headers,
       body: (req as any).body,
       ip: req.ip,
     };
