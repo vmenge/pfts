@@ -1,4 +1,4 @@
-import { async, Async, list, some, Option, ok, err, Result } from "@pfts/core/src";
+import { async, Async } from "@pfts/core/src";
 
 describe("Async", () => {
   describe("::new()", () => {

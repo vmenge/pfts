@@ -1,4 +1,4 @@
-import { err, Option, list, ok, Result, id, AsyncResult, Fn, some, none, List, seq, Seq } from "@pfts/core/src";
+import { err, Option, list, ok, Result, id, AsyncResult, Fn, some, none } from "@pfts/core/src";
 
 describe("Result", () => {
   describe("::ok()", () => {

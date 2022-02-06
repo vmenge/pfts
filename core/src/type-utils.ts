@@ -3,7 +3,9 @@ import { Result } from "./Result";
 export type Head<T extends any[]> = T extends [any, ...any[]] ? T[0] : never;
 export type Snd<T extends any[]> = T extends [any, any, ...any[]] ? T[1] : never;
 
-type Tail<T extends any[]> = ((...t: T) => any) extends (_: any, ...tail: infer TT) => any ? TT : never;
+type Tail<T extends any[]> = ((...t: T) => any) extends (_: any, ...tail: infer TT) => any
+  ? TT
+  : never;
 
 type HasTail<T extends any[]> = T extends [] | [any] ? false : true;
 
@@ -18,7 +20,9 @@ type Index<N extends number, T extends any[]> = T[N];
 
 type Cast<X, Y> = X extends Y ? X : Y;
 
-type Prepend<E, T extends any[]> = ((head: E, ...args: T) => any) extends (...args: infer U) => any ? U : T;
+type Prepend<E, T extends any[]> = ((head: E, ...args: T) => any) extends (...args: infer U) => any
+  ? U
+  : T;
 
 type Skip<N extends number, T extends any[], I extends any[] = []> = {
   0: Skip<N, Tail<T>, Prepend<any, I>>;
@@ -52,7 +56,12 @@ export type ResultCollector<T extends any[], Err, Acc extends any[] = []> = HasT
   ? Concat<Acc, [Result<Head<T>, Err>]>
   : ResultCollector<Tail<T>, Err, Concat<Acc, [Result<Head<T>, Err>]>>;
 
-export type ArrayKeyVals<Arr extends T[], Key extends keyof T, T, Acc extends any[] = []> = HasTail<Arr> extends false
+export type ArrayKeyVals<
+  Arr extends T[],
+  Key extends keyof T,
+  T,
+  Acc extends any[] = []
+> = HasTail<Arr> extends false
   ? Concat<Acc, [Head<Arr>[Key]]>
   : ArrayKeyVals<Tail<Arr>, Key, T, Concat<Acc, [Head<Arr>[Key]]>>;
 
@@ -70,7 +79,9 @@ export type ConcatX<T extends readonly (readonly any[])[]> = [
 ];
 
 // Taken from: https://stackoverflow.com/a/59833759
-type Flatten<T extends readonly any[]> = ConcatX<[...{ [K in keyof T]: T[K] extends any[] ? T[K] : [T[K]] }, ...[][]]>;
+type Flatten<T extends readonly any[]> = ConcatX<
+  [...{ [K in keyof T]: T[K] extends any[] ? T[K] : [T[K]] }, ...[][]]
+>;
 
 export type NonVoid<T> = T extends void ? never : T;
 
