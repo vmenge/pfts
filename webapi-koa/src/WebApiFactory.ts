@@ -1,9 +1,10 @@
 import { Server } from "http";
 import { WebApi } from "./WebApi";
 
-type TestAppState = {
+type TestAppState<T> = {
   busy?: boolean;
   server?: Server;
+  deps?: T;
 };
 
 type TestWebApiSettings<T> = {
@@ -17,9 +18,10 @@ export const useTestWebApi = <T>({
   dependencies,
   onClose,
 }: TestWebApiSettings<T>): (() => Server) => {
-  const state: TestAppState = {
+  const state: TestAppState<T> = {
     busy: undefined,
     server: undefined,
+    deps: undefined,
   };
 
   beforeAll(done => {
@@ -32,11 +34,13 @@ export const useTestWebApi = <T>({
 
     if (typeof dependencies === "function") {
       (dependencies as () => Promise<T>)().then(deps => {
+        state.deps = deps;
         builder.build(deps).listen();
         done();
       });
     } else {
-      state.server = builder.build(dependencies as T).listen();
+      state.deps = dependencies as T;
+      state.server = builder.build(state.deps).listen();
       done();
     }
   });
@@ -48,7 +52,7 @@ export const useTestWebApi = <T>({
       }
 
       if (onClose) {
-        onClose(dependencies).then(() => done());
+        onClose(state.deps!).then(() => done());
       } else {
         done();
       }
