@@ -7,7 +7,7 @@ type TestAppState<T> = {
   deps?: T;
 };
 
-type TestWebApiSettings<T> = {
+export type TestWebApiSettings<T> = {
   builder: WebApi<T>;
   dependencies: T | (() => Promise<T>);
   onClose?: (dependencies: T) => Promise<void>;
