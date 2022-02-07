@@ -35,7 +35,7 @@ export const useTestWebApi = <T>({
     if (typeof dependencies === "function") {
       (dependencies as () => Promise<T>)().then(deps => {
         state.deps = deps;
-        builder.build(deps).listen();
+        state.server = builder.build(deps).listen();
         done();
       });
     } else {
