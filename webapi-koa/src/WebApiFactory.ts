@@ -8,7 +8,7 @@ type TestAppState = {
 
 type TestWebApiSettings<T> = {
   builder: WebApi<T>;
-  dependencies: T;
+  dependencies: T | (() => Promise<T>);
   onClose?: (dependencies: T) => Promise<void>;
 };
 
@@ -29,8 +29,16 @@ export const useTestWebApi = <T>({
     }
 
     state.busy = true;
-    state.server = builder.build(dependencies).listen();
-    done();
+
+    if (typeof dependencies === "function") {
+      (dependencies as () => Promise<T>)().then(deps => {
+        builder.build(deps).listen();
+        done();
+      });
+    } else {
+      state.server = builder.build(dependencies as T).listen();
+      done();
+    }
   });
 
   afterAll(done => {
