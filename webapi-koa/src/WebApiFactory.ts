@@ -17,7 +17,7 @@ export const useTestWebApi = <T>({
   builder,
   dependencies,
   onClose,
-}: TestWebApiSettings<T>): (() => Server) => {
+}: TestWebApiSettings<T>): (() => [Server, T]) => {
   const state: TestAppState<T> = {
     busy: undefined,
     server: undefined,
@@ -59,5 +59,10 @@ export const useTestWebApi = <T>({
     });
   });
 
-  return () => state.server!;
+  return () => {
+    if (!state.server) throw new Error("Could not build server.");
+    if (!state.deps) throw new Error("Could not build depdendencies.");
+
+    return [state.server, state.deps];
+  };
 };
