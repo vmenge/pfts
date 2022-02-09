@@ -72,11 +72,11 @@ const createReqHandler = <T>(
   deps: T
 ): Middleware => {
   const specificity = pathSpecificity(path);
+  const matcher = match(path, { decode: decodeURIComponent });
 
   const middleware = async (ctx: Koa.Context, next: Koa.Next) => {
     if (ctx.request.method !== method) return next();
 
-    const matcher = match(path, { decode: decodeURIComponent });
     const matches = matcher(ctx.request.path);
     if (!matches) return next();
 
