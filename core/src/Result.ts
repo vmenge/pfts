@@ -882,21 +882,24 @@ export class Result<A, B> {
    *
    * ---
    */
-  static sequenceOption = <A, B>(ro: Result<Option<A>, B>): Option<Result<A, B>> => ro.traverseOption(id);
+  static sequenceOption = <A, B>(ro: Result<Option<A>, B>): Option<Result<A, B>> =>
+    ro.traverseOption(id);
 
   /**
    * `sequenceAsync: Result<Async<A>, B> -> Async<Result<A, B>>`
    *
    * ---
    */
-  static sequenceAsync = <A, B>(ro: Result<Async<A>, B>): Async<Result<A, B>> => ro.traverseAsync(id);
+  static sequenceAsync = <A, B>(ro: Result<Async<A>, B>): Async<Result<A, B>> =>
+    ro.traverseAsync(id);
 
   /**
    * `sequencePromise: Result<Promise<A>, B> -> Promise<Result<A, B>>`
    *
    * ---
    */
-  static sequencePromise = <A, B>(ro: Result<Promise<A>, B>): Promise<Result<A, B>> => ro.traversePromise(id);
+  static sequencePromise = <A, B>(ro: Result<Promise<A>, B>): Promise<Result<A, B>> =>
+    ro.traversePromise(id);
 
   /**
    * `sequenceAsyncOption: Result<AsyncOption<A>, B> -> AsyncOption<Result<A, B>>`
@@ -934,7 +937,8 @@ export class Result<A, B> {
    *
    * ---
    */
-  static sequenceArray = <A, B>(ro: Result<Array<A>, B>): Array<Result<A, B>> => ro.traverseArray(id);
+  static sequenceArray = <A, B>(ro: Result<Array<A>, B>): Array<Result<A, B>> =>
+    ro.traverseArray(id);
 
   /**
    * `isOk: Result<A, B> -> boolean`
@@ -1212,8 +1216,12 @@ export class Result<A, B> {
     return run(state);
   };
 
-  static hoard<A, B, Err, Return = Result<[A, B], List<Err>>>(rs: ResultCollector<[A, B], Err>): Return;
-  static hoard<A, B, C, Err, Return = Result<[A, B, C], List<Err>>>(rs: ResultCollector<[A, B, C], Err>): Return;
+  static hoard<A, B, Err, Return = Result<[A, B], List<Err>>>(
+    rs: ResultCollector<[A, B], Err>
+  ): Return;
+  static hoard<A, B, C, Err, Return = Result<[A, B, C], List<Err>>>(
+    rs: ResultCollector<[A, B, C], Err>
+  ): Return;
   static hoard<A, B, C, D, Err, Return = Result<[A, B, C, D], List<Err>>>(
     rs: ResultCollector<[A, B, C, D], Err>
   ): Return;
@@ -1229,15 +1237,38 @@ export class Result<A, B> {
   static hoard<A, B, C, D, E, F, G, H, Err, Return = Result<[A, B, C, D, E, F, G, H], List<Err>>>(
     rs: ResultCollector<[A, B, C, D, E, F, G, H], Err>
   ): Return;
-  static hoard<A, B, C, D, E, F, G, H, I, Err, Return = Result<[A, B, C, D, E, F, G, H, I], List<Err>>>(
-    rs: ResultCollector<[A, B, C, D, E, F, G, H, I], Err>
-  ): Return;
-  static hoard<A, B, C, D, E, F, G, H, I, J, Err, Return = Result<[A, B, C, D, E, F, G, H, I, J], List<Err>>>(
-    rs: ResultCollector<[A, B, C, D, E, F, G, H, I, J], Err>
-  ): Return;
+  static hoard<
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    Err,
+    Return = Result<[A, B, C, D, E, F, G, H, I], List<Err>>
+  >(rs: ResultCollector<[A, B, C, D, E, F, G, H, I], Err>): Return;
+  static hoard<
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    Err,
+    Return = Result<[A, B, C, D, E, F, G, H, I, J], List<Err>>
+  >(rs: ResultCollector<[A, B, C, D, E, F, G, H, I, J], Err>): Return;
   static hoard<T, Err, Return = Result<T[], List<Err>>>(rs: Result<T, Err>[]): Return;
   static hoard<T extends any[], Err, Return = Result<T, List<Err>>>(rs: Result<any, Err>[]): Return;
-  static hoard<T extends any[], Err, Return = Result<T, List<Err>>>(rs: Result<any, Err>[]): Return {
+  static hoard<T extends any[], Err, Return = Result<T, List<Err>>>(
+    rs: Result<any, Err>[]
+  ): Return {
     const [okVals, errVals] = List.ofArray(rs).partition(x => (x as any).isOk);
 
     if (errVals.isEmpty) {
@@ -1267,6 +1298,23 @@ export class Result<A, B> {
    * Ignores the contents of the `Result`.
    */
   static ignore = <A, B>(res: Result<A, B>): Result<void, B> => res.ignore();
+
+  /**
+   * `tryCatch: (() -> A, unknown -> B) -> Result<A, B>`
+   *
+   * ---
+   * Given a function that might throw an exception, returns `Ok<A>` if the function executes without issues.
+   * If the function throws, returns the an `Err` with the result of the `onThrow` function from the args.
+   */
+  static tryCatch = <A, B>(fn: () => A, onThrow: (e: unknown) => B): Result<A, B> => {
+    try {
+      const res = fn();
+
+      return ok(res);
+    } catch (e) {
+      return err(onThrow(e));
+    }
+  };
 }
 
 /**

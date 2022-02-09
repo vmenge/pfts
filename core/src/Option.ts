@@ -26,7 +26,8 @@ export class Option<A> {
    * const y = Option.new(undefined);
    * expect(y.isNone).toEqual(true);
    */
-  static new = <T>(value?: T): Option<NonNullable<T>> => new Option(value) as Option<NonNullable<T>>;
+  static new = <T>(value?: T): Option<NonNullable<T>> =>
+    new Option(value) as Option<NonNullable<T>>;
 
   /**
    * `some: T -> Option<T>`
@@ -1190,7 +1191,8 @@ export class Option<A> {
    * expect(b.isSome).toEqual(false);
    * expect(() => b.value).toThrow();
    */
-  static ofTruthy = <A>(a: A): Option<NonNullable<A>> => (a ? some(a!) : none()) as Option<NonNullable<A>>;
+  static ofTruthy = <A>(a: A): Option<NonNullable<A>> =>
+    (a ? some(a!) : none()) as Option<NonNullable<A>>;
 
   /**
    * `ofFalsy: A -> Option<A>`
@@ -1206,7 +1208,8 @@ export class Option<A> {
    * expect(b.isSome).toEqual(false);
    * expect(() => b.value).toThrow();
    */
-  static ofFalsy = <A>(a: A): Option<NonNullable<A>> => (!a ? option(a) : none()) as Option<NonNullable<A>>;
+  static ofFalsy = <A>(a: A): Option<NonNullable<A>> =>
+    (!a ? option(a) : none()) as Option<NonNullable<A>>;
 
   /**
    * `any: Option<A> -> Option<B> -> boolean`
@@ -1240,7 +1243,8 @@ export class Option<A> {
    * const b = Option.ofResult(err("oops"));
    * expect(b.isNone).toEqual(true);
    */
-  static ofResult = <A, B>(r: Result<A, B>): Option<A> => (Result.isOk(r) ? option(r.value) : none());
+  static ofResult = <A, B>(r: Result<A, B>): Option<A> =>
+    Result.isOk(r) ? option(r.value) : none();
 
   /**
    * `toResult: B -> Option<A> -> Result<A, B>`
@@ -1292,26 +1296,33 @@ export class Option<A> {
    *
    * ---
    */
-  static sequenceResult = <A, B>(optRes: Option<Result<A, B>>): Result<Option<A>, B> => optRes.traverseResult(id);
+  static sequenceResult = <A, B>(optRes: Option<Result<A, B>>): Result<Option<A>, B> =>
+    optRes.traverseResult(id);
 
   /**
    * `sequenceResult: Option<AsyncResult<A, B>> -> AsyncResult<Option<A>, B>`
    *
    * ---
    */
-  static sequenceAsyncResult<A, B>(optAsyncRes: Option<AsyncResult<A, B>>): AsyncResult<Option<A>, B>;
+  static sequenceAsyncResult<A, B>(
+    optAsyncRes: Option<AsyncResult<A, B>>
+  ): AsyncResult<Option<A>, B>;
   /**
    * `sequenceResult: Option<Async<Result<A, B>>> -> AsyncResult<Option<A>, B>`
    *
    * ---
    */
-  static sequenceAsyncResult<A, B>(optAsyncRes: Option<Async<Result<A, B>>>): AsyncResult<Option<A>, B>;
+  static sequenceAsyncResult<A, B>(
+    optAsyncRes: Option<Async<Result<A, B>>>
+  ): AsyncResult<Option<A>, B>;
   /**
    * `sequenceResult: Option<Promise<Result<A, B>>> -> AsyncResult<Option<A>, B>`
    *
    * ---
    */
-  static sequenceAsyncResult<A, B>(optAsyncRes: Option<Promise<Result<A, B>>>): AsyncResult<Option<A>, B>;
+  static sequenceAsyncResult<A, B>(
+    optAsyncRes: Option<Promise<Result<A, B>>>
+  ): AsyncResult<Option<A>, B>;
   static sequenceAsyncResult<A, B>(
     optAsyncRes: Option<AsyncResult<A, B> | Async<Result<A, B>> | Promise<Result<A, B>>>
   ): AsyncResult<Option<A>, B> {
@@ -1323,14 +1334,16 @@ export class Option<A> {
    *
    * ---
    */
-  static sequenceAsync = <A>(optAsync: Option<Async<A>>): Async<Option<A>> => optAsync.traverseAsync(id);
+  static sequenceAsync = <A>(optAsync: Option<Async<A>>): Async<Option<A>> =>
+    optAsync.traverseAsync(id);
 
   /**
    * `sequencePromise: Option<Promise<A>> -> Promise<Option<A>>`
    *
    * ---
    */
-  static sequencePromise = <A>(optPromise: Option<Promise<A>>): Promise<Option<A>> => optPromise.traversePromise(id);
+  static sequencePromise = <A>(optPromise: Option<Promise<A>>): Promise<Option<A>> =>
+    optPromise.traversePromise(id);
 
   /**
    * `ignore: Option<A> -> Option<void>`
@@ -1339,6 +1352,23 @@ export class Option<A> {
    * Ignores the contents of the `Option`.
    */
   static ignore = <A>(o: Option<A>): Option<void> => o.ignore();
+
+  /**
+   * `tryCatch: (() -> A) -> Option<A>`
+   *
+   * ---
+   * Given a function that might throw an exception, returns `Some<A>` if the function executes without issues.
+   * If the function throws, returns `None`.
+   */
+  static tryCatch = <A>(fn: () => A): Option<A> => {
+    try {
+      const res = fn();
+
+      return option(res);
+    } catch (_) {
+      return none();
+    }
+  };
 
   static ce = <A, B>(genFn: () => Generator<Option<A>, B, A>): Option<B> => {
     const iterator = genFn();

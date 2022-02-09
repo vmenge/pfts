@@ -595,6 +595,30 @@ describe("Result", () => {
     });
   });
 
+  describe("::tryCatch()", () => {
+    it("Returns an Ok value if the function doesn't throw", () => {
+      const res = Result.tryCatch(
+        () => 1,
+        () => "oops"
+      );
+      expect(res).toBeInstanceOf(Result);
+      expect(res.raw).toEqual(1);
+    });
+
+    it("Returns an Err with the resulting value of onThrow if the function throws", () => {
+      const res = Result.tryCatch(
+        () => {
+          throw "oops";
+          return 1;
+        },
+        () => "oh no!"
+      );
+
+      expect(res).toBeInstanceOf(Result);
+      expect(res.raw).toEqual("oh no!");
+    });
+  });
+
   describe("::collect()", () => {
     it("Happy path", () => {
       const res = Result.collect({

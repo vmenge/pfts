@@ -126,6 +126,25 @@ describe("Option", () => {
     });
   });
 
+  describe("::tryCatch()", () => {
+    it("Returns Some if the function doesn't throw", () => {
+      const a = Option.tryCatch(() => 1);
+
+      expect(a).toBeInstanceOf(Option);
+      expect(a.raw).toEqual(1);
+    });
+
+    it("Returns None if the function throws", () => {
+      const a = Option.tryCatch(() => {
+        throw "bla";
+        return 1;
+      });
+
+      expect(a).toBeInstanceOf(Option);
+      expect(a.isNone).toBe(true);
+    });
+  });
+
   describe("::ce()", () => {
     it("Happy path works correctly", () => {
       const res = Option.ce(function* () {
