@@ -14,7 +14,10 @@ describe("Captures path params", () => {
   );
 
   const testServer = useTestWebApi({ builder: webApi, dependencies: {} });
-  const getTestApp = () => supertest(testServer());
+  const getTestApp = () => {
+    const [app, _] = testServer();
+    return supertest(app);
+  };
 
   it("Still resolves the /hello route", async () => {
     const testApp = getTestApp();
