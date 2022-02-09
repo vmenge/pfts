@@ -38,6 +38,18 @@ describe("Option", () => {
     });
   });
 
+  describe(".expect()", () => {
+    it("returns the `Some` value contained inside the `Option<A>`", () => {
+      const x = some(5);
+      expect(x.expect("not be none")).toEqual(5);
+    });
+
+    it("throws an Error if the `Option<A>` is `None`", () => {
+      const y = none();
+      expect(() => y.expect("not none!!!")).toThrow(new Error("not none!!!"));
+    });
+  });
+
   describe(".raw", () => {
     it("returns the raw value contained inside the `Option<A>", () => {
       const x = option("something");

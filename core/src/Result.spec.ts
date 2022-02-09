@@ -65,6 +65,18 @@ describe("Result", () => {
     });
   });
 
+  describe(".expect()", () => {
+    it("returns the `Ok` value contained inside the Result<A, B>", () => {
+      const x = ok(5);
+      expect(x.expect("not be none")).toEqual(5);
+    });
+
+    it("throws an Error with the given string and the Err's value if the Result<A, B> is Err", () => {
+      const y = err("oh no!");
+      expect(() => y.expect("error")).toThrow(new Error("error: oh no!"));
+    });
+  });
+
   describe(".raw", () => {
     it("Returns the raw value inside a Result, be it Ok or Err", () => {
       const res1 = ok(1);

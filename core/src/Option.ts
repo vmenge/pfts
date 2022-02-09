@@ -4,7 +4,7 @@ import { asyncResult, AsyncResult } from "./AsyncResult";
 import { list, List } from "./List";
 import { err, ok, Result } from "./Result";
 import { Seq, seq } from "./Seq";
-import { id } from "./utils";
+import { id, unit } from "./utils";
 
 /**
  * A class that can represent the presence (`Some<A>`) or abscence (`None`) of a value.
@@ -107,6 +107,23 @@ export class Option<A> {
 
   *[Symbol.iterator](): Generator<Option<A>, A, any> {
     return yield this;
+  }
+
+  /**
+   * `this: Option<A>`
+   *
+   * `expect: string -> A`
+   *
+   * ---
+   * Returns the value inside the `Option` if it is `Some`.
+   * Otherwise throws an `Error` with the given `string` as its message.
+   */
+  expect(msg: string): A {
+    if (this.isSome) {
+      return this.raw!;
+    }
+
+    throw new Error(msg);
   }
 
   /**

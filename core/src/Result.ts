@@ -111,6 +111,22 @@ export class Result<A, B> {
     return this._val as B;
   }
 
+  /**
+   * `this: Result<A, B>`
+   *
+   * `expect: string -> A`
+   *
+   * ---
+   * Returns the value inside the `Result` if it is `Ok`.
+   * Otherwise throws an `Error` with the given `string` as its message plus the value inside the `Err`.
+   */
+  expect(msg: string): A {
+    if (this.isOk) {
+      return this.raw as A;
+    }
+
+    throw new Error(`${msg}: ${this.raw}`);
+  }
   *[Symbol.iterator](): Generator<Result<A, B>, A, any> {
     return yield this;
   }
