@@ -5,7 +5,7 @@ import { Dict } from "./Dict";
 import { asyncOption, AsyncOption } from "./AsyncOption";
 import { async, Async } from "./Async";
 import { Seq } from "./Seq";
-import { asyncResult, AsyncResult } from "./AsyncResult";
+import { AsyncResult } from "./AsyncResult";
 
 /**
  * A zero-indexed immutable collection of elements.
@@ -252,7 +252,9 @@ export class List<A> {
    * }
    */
   chooseAsync<B>(fn: (a: A) => Promise<Option<B>>): Async<List<B>>;
-  chooseAsync<B>(fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>): Async<List<B>> {
+  chooseAsync<B>(
+    fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>
+  ): Async<List<B>> {
     let result = this._elements.map(a => {
       const res = fn(a);
 
@@ -921,7 +923,8 @@ export class List<A> {
    * expect(actual.eq(expected)).toEqual(true);
    */
   sort(): List<A> {
-    const sortFn = typeof this._elements[0] === "number" ? (a: A, b: A) => (a as any) - (b as any) : undefined;
+    const sortFn =
+      typeof this._elements[0] === "number" ? (a: A, b: A) => (a as any) - (b as any) : undefined;
 
     return new List([...this._elements].sort(sortFn));
   }
@@ -1462,8 +1465,12 @@ export class List<A> {
    * ---
    */
   traverseAsyncOption<B>(fn: (a: A) => Promise<Option<B>>): AsyncOption<List<B>>;
-  traverseAsyncOption<B>(fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>): AsyncOption<List<B>> {
-    return asyncOption(Promise.all(this.map(fn)).then(x => List.sequenceOption(x))).map(List.ofArray);
+  traverseAsyncOption<B>(
+    fn: (a: A) => AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>
+  ): AsyncOption<List<B>> {
+    return asyncOption(Promise.all(this.map(fn)).then(x => List.sequenceOption(x))).map(
+      List.ofArray
+    );
   }
 
   /**
@@ -1514,7 +1521,9 @@ export class List<A> {
   traverseAsyncResult<B, C>(
     fn: (a: A) => AsyncResult<B, C> | Async<Result<B, C>> | Promise<Result<B, C>>
   ): AsyncResult<List<B>, C> {
-    return asyncResult(Promise.all(this.map(fn)).then(x => List.sequenceResult(x))).map(List.ofArray);
+    return AsyncResult.of(Promise.all(this.map(fn)).then(x => List.sequenceResult(x))).map(
+      List.ofArray
+    );
   }
 
   /**
@@ -1583,7 +1592,9 @@ export class List<A> {
    * ---
    */
   static sequenceResult<A, B>(lr: Array<Result<A, B>>): Result<Array<A>, B>;
-  static sequenceResult<A, B>(lr: List<Result<A, B>> | Array<Result<A, B>>): Result<List<A> | Array<A>, B> {
+  static sequenceResult<A, B>(
+    lr: List<Result<A, B>> | Array<Result<A, B>>
+  ): Result<List<A> | Array<A>, B> {
     if (lr instanceof List) {
       return lr.traverseResult(id);
     }

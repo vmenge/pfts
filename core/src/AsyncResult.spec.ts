@@ -1,33 +1,33 @@
-import { err, ok, async, asyncResult, AsyncResult } from "@pfts/core/src";
+import { err, ok, async, AsyncResult, asyncOk, asyncErr } from "@pfts/core/src";
 
 describe("AsyncResult", () => {
   describe("::ce()", () => {
-    it("Happy path works correctly", done => {
-      const res = AsyncResult.ce(function* () {
+    it("Happy path works correctly", async () => {
+      const res = await AsyncResult.ce(function* () {
         const a = yield* ok(5);
         const b = yield* async(10);
-        const c = yield* asyncResult(15);
+        const c = yield* asyncOk(15);
 
         return a + b + c;
       });
 
-      res.value.then(x => expect(x).toEqual(30)).then(done);
+      expect(res.raw).toEqual(30);
     });
 
-    it("Failure path works correctly", done => {
-      const res = AsyncResult.ce(function* () {
+    it("Failure path works correctly", async () => {
+      const res = await AsyncResult.ce(function* () {
         const a = yield* ok(5);
-        const b = yield* asyncResult(err("oops"));
+        const b = yield* asyncErr("oops");
         const c = yield* async(15);
 
         return a + b + c;
       });
 
-      res.err.then(x => expect(x).toEqual("oops")).then(done);
+      expect(res.raw).toEqual("oops");
     });
 
-    it("Failure path works correctly II", done => {
-      const res = AsyncResult.ce(function* () {
+    it("Failure path works correctly II", async () => {
+      const res = await AsyncResult.ce(function* () {
         const a = yield* async(5);
         const b = yield* err("oh no!");
         const c = yield* ok(15);
@@ -35,24 +35,19 @@ describe("AsyncResult", () => {
         return a + b + c;
       });
 
-      res.err.then(x => expect(x).toEqual("oh no!")).then(done);
+      expect(res.raw).toEqual("oh no!");
     });
   });
 
   describe("implements PromiseLike", () => {
-    it("Works correctly", done => {
-      const res = (async () => {
-        const a = await asyncResult(5);
-        const b = await asyncResult(10);
-        const c = await asyncResult(15);
+    it("Works correctly", async () => {
+      const a = await asyncOk(5);
+      const b = await asyncOk(10);
+      const c = await asyncOk(15);
 
-        return a.value + b.value + c.value;
-      })();
+      const res = a.value + b.value + c.value;
 
-      res.then(x => {
-        expect(x).toEqual(30);
-        done();
-      });
+      expect(res).toEqual(30);
     });
   });
 });

@@ -1,6 +1,6 @@
 import { Async, async } from "./Async";
 import { AsyncOption } from "./AsyncOption";
-import { asyncResult, AsyncResult } from "./AsyncResult";
+import { asyncOk, AsyncResult } from "./AsyncResult";
 import { list, List } from "./List";
 import { err, ok, Result } from "./Result";
 import { Seq, seq } from "./Seq";
@@ -26,8 +26,8 @@ export class Option<A> {
    * const y = Option.new(undefined);
    * expect(y.isNone).toEqual(true);
    */
-  static new = <T>(value?: T): Option<NonNullable<T>> =>
-    new Option(value) as Option<NonNullable<T>>;
+  static new = <A>(value?: A): Option<NonNullable<A>> =>
+    new Option(value) as Option<NonNullable<A>>;
 
   /**
    * `some: T -> Option<T>`
@@ -38,7 +38,7 @@ export class Option<A> {
    * const x = Option.some(5);
    * expect(x.value).toEqual(5);
    */
-  static some = <T>(value: NonNullable<T>): Option<T> => new Option(value);
+  static some = <A>(value: NonNullable<A>): Option<A> => new Option(value);
 
   /**
    * `none: () -> Option<T>`
@@ -48,7 +48,7 @@ export class Option<A> {
    * const x = Option.none();
    * expect(x.isNone).toEqual(true);
    */
-  static none = <T = never>(): Option<NonNullable<T>> => Option._none as Option<NonNullable<T>>;
+  static none = <A = never>(): Option<NonNullable<A>> => Option._none as Option<NonNullable<A>>;
 
   /**
    * @returns the `Some` value contained inside the `Option<A>`.
@@ -776,10 +776,13 @@ export class Option<A> {
     fn: (a: A) => AsyncResult<B, C> | Async<Result<B, C>> | Promise<Result<B, C>>
   ): AsyncResult<Option<B>, C> {
     if (this.isNone) {
-      return asyncResult(ok(none()));
+      return asyncOk(none());
     }
 
-    return asyncResult(fn(this.raw!)).map(option);
+    const x = fn(this.raw!);
+    const y = x instanceof AsyncResult ? x : AsyncResult.of(x);
+
+    return y.map(option);
   }
 
   /**

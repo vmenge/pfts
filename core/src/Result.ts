@@ -5,8 +5,8 @@ import { AsyncResult } from "./AsyncResult";
 import { List, list } from "./List";
 import { Option, none, option } from "./Option";
 import { seq, Seq } from "./Seq";
-import { AsyncOption } from "./AsyncOption";
-import { asyncOption } from ".";
+import { asyncOption, AsyncOption } from "./AsyncOption";
+import { asyncSome } from ".";
 
 /**
  * A class that can contain an `Ok<A>` value or an `Err<B>` value.
@@ -845,10 +845,13 @@ export class Result<A, B> {
     fn: (a: A) => AsyncOption<C> | Async<Option<C>> | Promise<Option<C>>
   ): AsyncOption<Result<C, B>> {
     if (this.isErr) {
-      return asyncOption(err(this.raw as B));
+      return asyncSome(err(this.raw as B));
     }
 
-    return asyncOption(fn(this.raw as A)).map(ok);
+    const x = fn(this.raw as A);
+    const y = x instanceof AsyncOption ? x : asyncOption(x);
+
+    return y.map(ok);
   }
 
   /**

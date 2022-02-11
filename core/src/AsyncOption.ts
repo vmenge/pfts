@@ -1,11 +1,18 @@
 import { Async, async } from "./Async";
 import { AsyncResult } from "./AsyncResult";
 import { List } from "./List";
-import { Option, none, option } from "./Option";
+import { Option, none, option, some } from "./Option";
 import { err, ok, Result } from "./Result";
 
 const normalize = <T>(
-  value: AsyncOption<T> | Async<Option<T>> | Async<T> | Option<T> | Promise<Option<T>> | Promise<T> | T
+  value:
+    | AsyncOption<T>
+    | Async<Option<T>>
+    | Async<T>
+    | Option<T>
+    | Promise<Option<T>>
+    | Promise<T>
+    | T
 ): AsyncOption<NonNullable<T>> => {
   if (value instanceof AsyncOption) {
     return value as AsyncOption<NonNullable<T>>;
@@ -44,6 +51,12 @@ const normalize = <T>(
 
 export class AsyncOption<A> implements PromiseLike<Option<A>> {
   constructor(private readonly rawAsync: Async<Option<A>>) {}
+
+  static of<A>(
+    a: Async<Option<A>> | Async<A> | Option<A> | Promise<Option<A>> | Promise<A> | A
+  ): AsyncOption<NonNullable<A>> {
+    return normalize(a);
+  }
 
   /**
    * `ofAsync: Async<Option<A>> -> AsyncOption<A>`
@@ -220,7 +233,10 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   map2<B, C>(ao: Promise<Option<B>>, fn: (a: A, b: B) => C): AsyncOption<C>;
-  map2<B, C>(ao: AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>, fn: (a: A, b: B) => C): AsyncOption<C> {
+  map2<B, C>(
+    ao: AsyncOption<B> | Async<Option<B>> | Promise<Option<B>>,
+    fn: (a: A, b: B) => C
+  ): AsyncOption<C> {
     const b = normalize(ao);
 
     return this.bind(a => b.map(b => fn(a, b)));
@@ -353,7 +369,9 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    * ---
    */
   orElseWithAsync(fn: () => Promise<Option<A>>): AsyncOption<A>;
-  orElseWithAsync(fn: () => AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>): AsyncOption<A> {
+  orElseWithAsync(
+    fn: () => AsyncOption<A> | Async<Option<A>> | Promise<Option<A>>
+  ): AsyncOption<A> {
     const res = this.rawAsync.bind(x => {
       if (x.isSome) {
         return async(x);
@@ -447,7 +465,8 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
     return this.map(() => {});
   }
 
-  static isSome = <A>(ao: AsyncOption<A> | Async<Option<A>>): Async<boolean> => normalize(ao).isSome;
+  static isSome = <A>(ao: AsyncOption<A> | Async<Option<A>>): Async<boolean> =>
+    normalize(ao).isSome;
 
   static isNone = <A>(ao: AsyncOption<A>): Async<boolean> => normalize(ao).isNone;
 
@@ -506,7 +525,9 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
    *
    * b.isNone.then(k => expect(k).toEqual(true));
    */
-  static ce = <A, B>(genFn: () => Generator<AsyncOption<A> | Async<A> | Option<A>, B, A>): AsyncOption<B> => {
+  static ce = <A, B>(
+    genFn: () => Generator<AsyncOption<A> | Async<A> | Option<A>, B, A>
+  ): AsyncOption<B> => {
     const iterator = genFn();
     let state = iterator.next();
 
@@ -542,8 +563,6 @@ export class AsyncOption<A> implements PromiseLike<Option<A>> {
   static ignore = <A>(o: AsyncOption<A>): AsyncOption<void> => o.ignore();
 }
 
-/**
- * Converts any of the following into an `AsyncOption<T>`:
- * `Async<Option<T>>`, `Promise<Option<T>>`, `Async<T>`, `Option<T>`, `Promise<T>`, `T`
- */
-export const asyncOption = normalize;
+export const asyncSome = <A>(a: NonNullable<A>): AsyncOption<A> => some(a).toAsyncOption();
+export const asyncNone = <A = never>(): AsyncOption<NonNullable<A>> => none().toAsyncOption();
+export const asyncOption = AsyncOption.of;
